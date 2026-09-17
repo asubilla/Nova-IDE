@@ -1,92 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 
-interface FileNode {
+interface Agent {
   id: string;
   name: string;
-  type: 'file' | 'folder';
-  children?: FileNode[];
-  expanded?: boolean;
+  status: 'running' | 'done' | 'waiting' | 'error';
+  task: string;
+  progress: number;
 }
 
-interface AgentStatus {
+interface FileNode {
   name: string;
-  status: 'online' | 'busy' | 'offline';
+  path: string;
+  is_directory: boolean;
+  children?: FileNode[];
 }
 
 interface SidebarProps {
-  width?: number;
+  width: number;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+  onFileOpen: (path: string) => void;
+  agents: Agent[];
 }
 
-const defaultFiles: FileNode[] = [
-  {
-    id: '1',
-    name: 'src',
-    type: 'folder',
-    expanded: true,
-    children: [
-      {
-        id: '2',
-        name: 'components',
-        type: 'folder',
-        expanded: true,
-        children: [
-          { id: '3', name: 'TitleBar.tsx', type: 'file' },
-          { id: '4', name: 'Sidebar.tsx', type: 'file' },
-          { id: '5', name: 'MainLayout.tsx', type: 'file' },
-        ],
-      },
-      {
-        id: '6',
-        name: 'orchestration',
-        type: 'folder',
-        children: [
-          { id: '7', name: 'OrchestrationPanel.tsx', type: 'file' },
-          { id: '8', name: 'PatternCard.tsx', type: 'file' },
-        ],
-      },
-      { id: '9', name: 'types.ts', type: 'file' },
-      { id: '10', name: 'store.ts', type: 'file' },
-      { id: '11', name: 'App.tsx', type: 'file' },
-    ],
-  },
-  {
-    id: '12',
-    name: 'config',
-    type: 'folder',
-    children: [
-      { id: '13', name: 'defaults.ts', type: 'file' },
-      { id: '14', name: 'models.ts', type: 'file' },
-    ],
-  },
-  { id: '15', name: 'package.json', type: 'file' },
-  { id: '16', name: 'tsconfig.json', type: 'file' },
-  { id: '17', name: 'README.md', type: 'file' },
-];
+const statusColors: Record<string, string> = {
+  running: '#00e676',
+  done: '#6c5ce7',
+  waiting: '#ffd600',
+  error: '#ff5252',
+};
 
-const agentStatuses: AgentStatus[] = [
-  { name: 'Code Assistant', status: 'online' },
-  { name: 'Debugger', status: 'busy' },
-  { name: 'Reviewer', status: 'online' },
-  { name: 'Architect', status: 'offline' },
-];
-
-const FileIcon: React.FC<{ type: 'file' | 'folder'; expanded?: boolean }> = ({ type, expanded }) => {
-  if (type === 'folder') {
+const FileIcon: React.FC<{ isDirectory: boolean; expanded?: boolean }> = ({ isDirectory, expanded }) => {
+  if (isDirectory) {
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill={expanded ? '#6c5ce7' : '#7a7c94'} opacity={expanded ? 1 : 0.7}>
         <path d="M3 7V17C3 18.1 3.9 19 5 19H19C20.1 19 21 18.1 21 17V9C21 7.9 20.1 7 19 7H13L11 5H5C3.9 5 3 5.9 3 7Z" />
       </svg>
     );
   }
-  const ext = '';
-  const colors: Record<string, string> = {
-    tsx: '#00d2ff',
-    ts: '#3178c6',
-    json: '#e4e4f0',
-    md: '#00e676',
-  };
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors[ext] || '#7a7c94'} strokeWidth="1.5">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7a7c94" strokeWidth="1.5">
       <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" />
       <path d="M14 2V8H20" />
     </svg>
@@ -96,14 +50,24 @@ const FileIcon: React.FC<{ type: 'file' | 'folder'; expanded?: boolean }> = ({ t
 const FileTreeItem: React.FC<{
   node: FileNode;
   depth: number;
-  onToggle: (id: string) => void;
-}> = ({ node, depth, onToggle }) => {
-  const [expanded, setExpanded] = useState(node.expanded ?? false);
+  onFileOpen: (path: string) => void;
+}> = ({ node, depth, onFileOpen }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [children, setChildren] = useState<FileNode[]>(node.children || []);
 
-  const handleClick = () => {
-    if (node.type === 'folder') {
+  const handleClick = async () => {
+    if (node.is_directory) {
+      if (!expanded && children.length === 0) {
+        try {
+          const entries = await invoke<FileNode[]>('list_directory', { path: node.path });
+          setChildren(entries);
+        } catch (e) {
+          console.warn('Failed to list directory:', e);
+        }
+      }
       setExpanded(!expanded);
-      onToggle(node.id);
+    } else {
+      onFileOpen(node.path);
     }
   };
 
@@ -114,7 +78,7 @@ const FileTreeItem: React.FC<{
         style={{ paddingLeft: `${12 + depth * 16}px` }}
         onClick={handleClick}
       >
-        {node.type === 'folder' && (
+        {node.is_directory && (
           <svg
             width="12"
             height="12"
@@ -127,21 +91,37 @@ const FileTreeItem: React.FC<{
             <path d="M9 18L15 12L9 6" />
           </svg>
         )}
-        {node.type === 'file' && <span style={{ width: 12 }} />}
-        <FileIcon type={node.type} expanded={expanded} />
+        {!node.is_directory && <span style={{ width: 12 }} />}
+        <FileIcon isDirectory={node.is_directory} expanded={expanded} />
         <span className="sidebar-file-name">{node.name}</span>
       </div>
-      {expanded && node.children?.map((child) => (
-        <FileTreeItem key={child.id} node={child} depth={depth + 1} onToggle={onToggle} />
+      {expanded && children.map((child) => (
+        <FileTreeItem key={child.path} node={child} depth={depth + 1} onFileOpen={onFileOpen} />
       ))}
     </>
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ width = 260 }) => {
-  const [files] = useState(defaultFiles);
+export const Sidebar: React.FC<SidebarProps> = ({
+  width,
+  activeTab,
+  onTabChange,
+  onFileOpen,
+  agents,
+}) => {
+  const [files, setFiles] = useState<FileNode[]>([]);
 
-  const handleToggle = (_id: string) => {};
+  useEffect(() => {
+    const loadFiles = async () => {
+      try {
+        const result = await invoke<FileNode[]>('list_directory', { path: '.' });
+        setFiles(result);
+      } catch (e) {
+        console.warn('Failed to load file tree:', e);
+      }
+    };
+    loadFiles();
+  }, []);
 
   return (
     <div className="sidebar" style={{ width }}>
@@ -151,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = 260 }) => {
         </div>
         <div className="sidebar-file-tree">
           {files.map((node) => (
-            <FileTreeItem key={node.id} node={node} depth={0} onToggle={handleToggle} />
+            <FileTreeItem key={node.path} node={node} depth={0} onFileOpen={onFileOpen} />
           ))}
         </div>
       </div>
@@ -161,12 +141,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ width = 260 }) => {
           <span>AGENT STATUS</span>
         </div>
         <div className="sidebar-agent-chips">
-          {agentStatuses.map((agent) => (
-            <div key={agent.name} className="sidebar-agent-chip">
-              <span className={`sidebar-agent-dot status-${agent.status}`} />
+          {agents.map((agent) => (
+            <div key={agent.id} className="sidebar-agent-chip">
+              <span
+                className="sidebar-agent-dot"
+                style={{ backgroundColor: statusColors[agent.status] || '#555' }}
+              />
               <span className="sidebar-agent-name">{agent.name}</span>
             </div>
           ))}
+          {agents.length === 0 && (
+            <span style={{ color: '#555', fontSize: 11 }}>No agents active</span>
+          )}
         </div>
       </div>
     </div>

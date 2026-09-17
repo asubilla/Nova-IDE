@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 interface TitleBarProps {
-  onOpenSettings?: () => void;
+  onOpenSettings: () => void;
 }
 
 export const TitleBar: React.FC<TitleBarProps> = ({ onOpenSettings }) => {

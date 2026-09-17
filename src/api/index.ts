@@ -1,0 +1,10 @@
+export { aiAPI } from './ai';
+export { fsAPI } from './filesystem';
+export { terminalAPI } from './terminal';
+export { gitAPI } from './git';
+export { agentsAPI } from './agents';
+export { mcpAPI } from './mcp';
+export { browserAPI } from './browser';
+export { healingAPI } from './healing';
+export { orchestrationAPI } from './orchestration';
+export { settingsAPI } from './settings';

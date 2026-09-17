@@ -1,25 +1,15 @@
-import { useState } from "react";
-import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { MainLayout } from './components/layout/MainLayout';
+import './styles/reset.css';
+import './styles/variables.css';
+import './styles/typography.css';
+import './styles/utilities.css';
+import './styles/layout.css';
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <ErrorBoundary>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          fontFamily: "'JetBrains Mono', monospace",
-          backgroundColor: "#1e1e2e",
-          color: "#cdd6f4",
-        }}
-      >
-        <h1>Nova IDE</h1>
-        <button onClick={() => setCount((c) => c + 1)}>Count: {count}</button>
-      </div>
+      <MainLayout />
     </ErrorBoundary>
   );
 }
