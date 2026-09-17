@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { playNotificationSound } from '../utils/notificationSound';
 
 export type NotificationType = 'success' | 'error' | 'warning' | 'info' | 'loading';
 
@@ -52,6 +53,10 @@ export const useNotificationStore = create<NotificationState>()(
         set((s) => ({
           notifications: [notification, ...s.notifications].slice(0, 100),
         }));
+
+        if (notification.type !== 'loading') {
+          playNotificationSound(notification.type);
+        }
 
         if (notification.duration && notification.duration > 0) {
           setTimeout(() => get().dismiss(id), notification.duration);

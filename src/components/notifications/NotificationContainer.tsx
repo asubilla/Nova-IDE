@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNotificationStore, type Notification } from '../../store/notificationStore';
+import { isSoundEnabled, setSoundEnabled, initSoundSetting } from '../../utils/notificationSound';
 
 const TYPE_CONFIG: Record<Notification['type'], { icon: string; color: string; bg: string; border: string }> = {
   success: { icon: '\u2713', color: '#00e676', bg: '#00e67612', border: '#00e67640' },
@@ -138,6 +139,18 @@ export function NotificationContainer() {
   const notifications = useNotificationStore((s) => s.notifications);
   const maxVisible = useNotificationStore((s) => s.maxVisible);
   const visible = notifications.slice(0, maxVisible);
+  const [soundOn, setSoundOn] = useState(isSoundEnabled());
+
+  useEffect(() => {
+    initSoundSetting();
+    setSoundOn(isSoundEnabled());
+  }, []);
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+  };
 
   return (
     <div
@@ -154,6 +167,40 @@ export function NotificationContainer() {
       }}
     >
       <div style={{ pointerEvents: 'auto' }}>
+        {visible.length > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, gap: 6 }}>
+            <button
+              onClick={toggleSound}
+              title={soundOn ? 'Mute notifications' : 'Unmute notifications'}
+              style={{
+                background: '#1a1b2e',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: soundOn ? '#00e676' : '#666',
+                fontSize: 14,
+                cursor: 'pointer',
+                padding: '3px 8px',
+                lineHeight: 1,
+              }}
+            >
+              {soundOn ? '\u266B' : '\u2716'}
+            </button>
+            <button
+              onClick={() => useNotificationStore.getState().dismissAll()}
+              style={{
+                background: '#1a1b2e',
+                border: '1px solid #333',
+                borderRadius: 6,
+                color: '#888',
+                fontSize: 11,
+                cursor: 'pointer',
+                padding: '3px 8px',
+              }}
+            >
+              Clear all
+            </button>
+          </div>
+        )}
         {visible.map((n) => (
           <NotificationItem key={n.id} notification={n} />
         ))}
