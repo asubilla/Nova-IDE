@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { ErrorFallback } from './error/ErrorFallback';
 
 interface ErrorBoundaryProps {
@@ -22,7 +23,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    if (import.meta.env.VITE_DEBUG === 'true') {
+    if ((import.meta as any).env?.VITE_DEBUG === 'true') {
       console.error('[ErrorBoundary] Caught error:', error);
       console.error('[ErrorBoundary] Component stack:', errorInfo.componentStack);
     }

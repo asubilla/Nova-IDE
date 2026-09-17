@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+
 import { useMCPRegistryStore } from '../../store/mcpRegistryStore';
 
 const THEME = {
@@ -127,7 +128,7 @@ export default function MCPExecutionLog() {
                   >
                     {JSON.stringify(exec.input, null, 2)}
                   </pre>
-                  {exec.output && (
+                  {exec.output != null && (
                     <>
                       <div style={{ fontSize: 11, color: '#888', marginTop: 8, marginBottom: 6 }}>Output:</div>
                       <pre

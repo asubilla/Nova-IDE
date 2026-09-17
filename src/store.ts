@@ -144,7 +144,7 @@ export const useIDEStore = create<IDEState>((set, get) => ({
       const newActive =
         s.activeFile === path
           ? filtered.length > 0
-            ? filtered[filtered.length - 1].path
+            ? filtered[filtered.length - 1]!.path
             : null
           : s.activeFile;
       return { openFiles: filtered, activeFile: newActive };

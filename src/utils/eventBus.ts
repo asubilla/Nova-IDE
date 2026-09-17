@@ -56,7 +56,7 @@ export class EventBus<Events extends EventMap = EventMap> {
   }
 }
 
-export interface NovaEvents {
+export type NovaEvents = Record<string, unknown> & {
   'file:open': { path: string };
   'file:save': { path: string };
   'agent:start': { agentId: string };
@@ -66,6 +66,6 @@ export interface NovaEvents {
   'orchestration:complete': { patternId: string; result: unknown };
   'theme:change': { theme: string };
   'settings:change': { key: string; value: unknown };
-}
+};
 
 export const eventBus = new EventBus<NovaEvents>();

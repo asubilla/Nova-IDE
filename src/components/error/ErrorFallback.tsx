@@ -78,7 +78,7 @@ const secondaryButtonStyle: React.CSSProperties = {
 };
 
 export function ErrorFallback({ error, onReset }: ErrorFallbackProps): React.ReactElement {
-  const isDev = import.meta.env.VITE_DEBUG === 'true';
+  const isDev = (import.meta as any).env?.VITE_DEBUG === 'true';
 
   return (
     <div style={containerStyle}>

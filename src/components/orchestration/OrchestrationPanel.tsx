@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+
+import { PatternConfig, OrchestrationResult } from '../../types/orchestration';
+
 import { PatternCard } from './PatternCard';
 import { WorkflowVisualizer } from './WorkflowVisualizer';
-import { PatternConfig, OrchestrationResult } from '../../types/orchestration';
 
 const patterns: PatternConfig[] = [
   {
@@ -86,13 +88,13 @@ export const OrchestrationPanel: React.FC = () => {
         return;
       }
 
-      result.steps[stepIndex].status = 'running';
+      result.steps[stepIndex]!.status = 'running';
       setCurrentResult({ ...result, steps: [...result.steps] });
 
       setTimeout(() => {
-        result.steps[stepIndex].status = 'completed';
-        result.steps[stepIndex].output = `Output from ${result.steps[stepIndex].agentName}`;
-        result.steps[stepIndex].completedAt = Date.now();
+        result.steps[stepIndex]!.status = 'completed';
+        result.steps[stepIndex]!.output = `Output from ${result.steps[stepIndex]!.agentName}`;
+        result.steps[stepIndex]!.completedAt = Date.now();
         stepIndex++;
         processStep();
       }, 600 + Math.random() * 800);

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+
 import { OrchestrationResult } from '../../types/orchestration';
 
 interface WorkflowVisualizerProps {
@@ -27,7 +28,7 @@ export const WorkflowVisualizer: React.FC<WorkflowVisualizerProps> = ({ result }
   const svgHeight = Math.max(200, nodeCount * 80 + 40);
 
   const positions: NodePosition[] = result.steps.map((_, i) => ({
-    id: result.steps[i].id,
+    id: result.steps[i]!.id,
     x: svgWidth / 2,
     y: 50 + i * 80,
   }));
@@ -53,6 +54,7 @@ export const WorkflowVisualizer: React.FC<WorkflowVisualizerProps> = ({ result }
       }, 500);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [result.steps]);
 
   return (
@@ -80,7 +82,7 @@ export const WorkflowVisualizer: React.FC<WorkflowVisualizerProps> = ({ result }
 
         {positions.map((pos, i) => {
           if (i === positions.length - 1) return null;
-          const nextPos = positions[i + 1];
+          const nextPos = positions[i + 1]!;
           const edgeId = `${pos.id}-${nextPos.id}`;
           const isAnimated = animatedEdges.has(pos.id);
 
@@ -114,7 +116,7 @@ export const WorkflowVisualizer: React.FC<WorkflowVisualizerProps> = ({ result }
         })}
 
         {positions.map((pos, i) => {
-          const step = result.steps[i];
+          const step = result.steps[i]!;
           const color = statusColors[step.status] || '#4a4c64';
 
           return (

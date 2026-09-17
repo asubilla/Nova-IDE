@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+
 import type { Workflow, WorkflowNode, WorkflowEdge, AgentStatus } from '../../types/agent';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -74,7 +75,7 @@ export default function WorkflowEditor() {
       nodes: prev.nodes.map((n) => {
         if (n.id !== id) return n;
         const idx = order.indexOf(n.status);
-        return { ...n, status: order[(idx + 1) % order.length] };
+        return { ...n, status: order[(idx + 1) % order.length]! };
       }),
     }));
   };

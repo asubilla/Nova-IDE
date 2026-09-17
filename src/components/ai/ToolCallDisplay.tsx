@@ -1,4 +1,5 @@
 import React from 'react';
+
 import type { ToolCall } from '../../types/ai';
 
 const colors = {
@@ -25,7 +26,7 @@ interface ToolCallDisplayProps {
 }
 
 export const ToolCallDisplay: React.FC<ToolCallDisplayProps> = ({ toolCall }) => {
-  const status = statusStyles[toolCall.status] || statusStyles.pending;
+  const status = statusStyles[toolCall.status] || statusStyles.pending!;
 
   return (
     <div

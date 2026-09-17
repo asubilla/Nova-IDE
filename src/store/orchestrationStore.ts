@@ -8,6 +8,8 @@ interface OrchestrationState {
   getAvailablePatterns: () => PatternConfig[];
   cancelExecution: () => void;
   resetWorkflow: () => void;
+  subscribe: (listener: () => void) => () => void;
+  getState: () => OrchestrationState;
 }
 
 const defaultPatterns: PatternConfig[] = [
@@ -57,6 +59,8 @@ export const createOrchestrationStore = (): OrchestrationState => {
     getAvailablePatterns: () => [],
     cancelExecution: () => {},
     resetWorkflow: () => {},
+    subscribe: () => () => {},
+    getState: () => state,
   };
 
   const listeners = new Set<() => void>();
@@ -97,10 +101,10 @@ export const createOrchestrationStore = (): OrchestrationState => {
     simulateExecution(pattern, (updated) => {
       setState({ currentWorkflow: updated });
     }, (completed) => {
-      setState((prev) => ({
+      setState({
         currentWorkflow: completed,
-        executionHistory: [...(prev?.executionHistory ?? state.executionHistory), completed],
-      }));
+        executionHistory: [...state.executionHistory, completed],
+      });
     });
   };
 
@@ -170,7 +174,7 @@ function simulateExecution(
       return;
     }
 
-    const step = result.steps[stepIndex];
+    const step = result.steps[stepIndex]!;
     step.status = 'running';
     step.startedAt = Date.now();
     step.input = `Input for ${step.agentName}`;

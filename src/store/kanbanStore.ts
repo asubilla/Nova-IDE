@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+
 import type { Board, Card, CardStatus } from '../types/kanban';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -61,6 +62,7 @@ export const useKanbanStore = create<KanbanState>((set) => ({
       const idx = srcCol.cards.findIndex((c) => c.id === cardId);
       if (idx === -1) return s;
       const [card] = srcCol.cards.splice(idx, 1);
+      if (!card) return s;
       card.status = to;
       if (to === 'done') card.progress = 100;
       dstCol.cards.push(card);

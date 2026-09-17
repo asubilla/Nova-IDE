@@ -53,7 +53,7 @@ export default function AgentMonitor() {
         )}
 
         {agents.map((agent) => {
-          const st = statusStyles[agent.status] ?? statusStyles.waiting;
+          const st = statusStyles[agent.status] ?? statusStyles.waiting!;
           return (
             <div
               key={agent.id}
@@ -132,8 +132,8 @@ export default function AgentMonitor() {
                     fontSize: 9,
                     fontWeight: 600,
                     textTransform: 'uppercase',
-                    color: statusStyles.running.color,
-                    background: statusStyles.running.bg,
+                    color: statusStyles.running!.color,
+                    background: statusStyles.running!.bg,
                     padding: '2px 6px',
                     borderRadius: 3,
                   }}

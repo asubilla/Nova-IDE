@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+
+import { SettingsPanel } from '../settings/SettingsPanel';
+import AgentMonitor from '../agents/AgentMonitor';
+
 import { TitleBar } from './TitleBar';
 import { ActivityBar } from './ActivityBar';
 import { Sidebar } from './Sidebar';
-import { SplitPane } from './SplitPane';
-import { SettingsPanel } from '../settings/SettingsPanel';
-import AgentMonitor from '../agents/AgentMonitor';
 
 interface EditorTab {
   id: string;
@@ -31,26 +32,32 @@ interface AppSettings {
   defaultProvider: string;
 }
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 const bottomTabs = ['Terminal', 'Problems', 'Agents', 'Output'] as const;
+type BottomTab = typeof bottomTabs[number];
 
-export const MainLayout: React.FC = () => {
+export function MainLayout() {
   const [tabs, setTabs] = useState<EditorTab[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('');
-
-  const [activeBottomTab, setActiveBottomTab] = useState<string>('Terminal');
+  const [activeTab, setActiveTab] = useState('');
+  const [activeBottomTab, setActiveBottomTab] = useState<BottomTab>('Terminal');
   const [terminalLines, setTerminalLines] = useState<string[]>([
     'Nova IDE v0.1.0 — Ready',
     'Type commands below...',
     '',
   ]);
   const [terminalInput, setTerminalInput] = useState('');
-
-  const [sidebarVisible, setSidebarVisible] = useState(true);
-  const [sidebarWidth] = useState(260);
   const [activeSidebarTab, setActiveSidebarTab] = useState('explorer');
-
   const [showSettings, setShowSettings] = useState(false);
-  const [settings, setSettings] = useState<AppSettings>({
+  const [showAIPanel, setShowAIPanel] = useState(true);
+  const [aiMessages, setAiMessages] = useState<ChatMessage[]>([]);
+  const [aiInput, setAiInput] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const [settings] = useState<AppSettings>({
     theme: 'nova-dark',
     fontSize: 13,
     tabSize: 2,
@@ -60,30 +67,13 @@ export const MainLayout: React.FC = () => {
 
   const [agents, setAgents] = useState<Agent[]>([]);
 
-  const [showAIPanel, setShowAIPanel] = useState(true);
-  const [aiMessages, setAiMessages] = useState<Array<{ role: string; content: string }>>([]);
-  const [aiInput, setAiInput] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
-
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const result = await invoke<AppSettings>('get_settings');
-        setSettings(result);
-      } catch (e) {
-        console.warn('Using default settings:', e);
-      }
-    };
-    loadSettings();
-  }, []);
-
   useEffect(() => {
     const loadAgents = async () => {
       try {
         const result = await invoke<Agent[]>('list_agents');
         setAgents(result);
-      } catch (e) {
-        console.warn('Failed to load agents:', e);
+      } catch {
+        // agents not loaded yet
       }
     };
     loadAgents();
@@ -93,26 +83,15 @@ export const MainLayout: React.FC = () => {
 
   const handleTerminalCommand = useCallback(async (command: string) => {
     if (!command.trim()) return;
-
     setTerminalLines(prev => [...prev, `$ ${command}`]);
-
     try {
-      if (command.startsWith('cd ')) {
-        setTerminalLines(prev => [...prev, `Changed directory to ${command.slice(3)}`]);
-      } else if (command === 'clear') {
+      if (command === 'clear') {
         setTerminalLines([]);
       } else if (command === 'help') {
-        setTerminalLines(prev => [...prev,
-          'Nova IDE Commands:',
-          '  help     — Show this help',
-          '  clear    — Clear terminal',
-          '  agents   — List active agents',
-          '  theme    — Toggle theme',
-          '',
-        ]);
+        setTerminalLines(prev => [...prev, 'Nova IDE Commands:', '  help     — Show this help', '  clear    — Clear terminal', '  agents   — List active agents', '']);
       } else if (command === 'agents') {
-        const agentList = agents.map(a => `  ${a.name} [${a.status}] ${a.progress}%`).join('\n');
-        setTerminalLines(prev => [...prev, agentList || '  No active agents', '']);
+        const list = agents.map(a => `  ${a.name} [${a.status}] ${a.progress}%`).join('\n');
+        setTerminalLines(prev => [...prev, list || '  No active agents', '']);
       } else {
         const result = await invoke<string>('send_input', { id: 'main', input: command });
         setTerminalLines(prev => [...prev, result]);
@@ -125,20 +104,15 @@ export const MainLayout: React.FC = () => {
 
   const handleSendAI = useCallback(async () => {
     if (!aiInput.trim() || aiLoading) return;
-
-    const userMessage = { role: 'user', content: aiInput };
+    const userMessage: ChatMessage = { role: 'user', content: aiInput };
     setAiMessages(prev => [...prev, userMessage]);
     setAiInput('');
     setAiLoading(true);
-
     try {
       const response = await invoke<string>('send_ai_message', {
         providerId: settings.defaultProvider,
         model: 'gpt-4',
-        messages: [...aiMessages, userMessage].map(m => ({
-          role: m.role,
-          content: m.content,
-        })),
+        messages: [...aiMessages, userMessage].map(m => ({ role: m.role, content: m.content })),
       });
       setAiMessages(prev => [...prev, { role: 'assistant', content: response }]);
     } catch (e) {
@@ -164,6 +138,8 @@ export const MainLayout: React.FC = () => {
     }
   }, []);
 
+  const activeTabData = tabs.find(t => t.id === activeTab);
+
   return (
     <div className="main-layout">
       <TitleBar onOpenSettings={() => setShowSettings(true)} />
@@ -175,17 +151,13 @@ export const MainLayout: React.FC = () => {
             if (item === 'explorer') setActiveSidebarTab('explorer');
           }}
         />
-
-        {sidebarVisible && (
-          <Sidebar
-            width={sidebarWidth}
-            activeTab={activeSidebarTab}
-            onTabChange={setActiveSidebarTab}
-            onFileOpen={handleOpenFile}
-            agents={agents}
-          />
-        )}
-
+        <Sidebar
+          width={260}
+          activeTab={activeSidebarTab}
+          onTabChange={setActiveSidebarTab}
+          onFileOpen={handleOpenFile}
+          agents={agents}
+        />
         <div className="main-content">
           <div className="editor-tabs">
             {tabs.map((tab) => (
@@ -200,29 +172,27 @@ export const MainLayout: React.FC = () => {
             ))}
           </div>
 
-          <SplitPane
-            direction="horizontal"
-            initialSize={showAIPanel ? 0.6 : 1}
-            left={
-              <div className="code-editor">
-                <div className="code-editor-content">
-                  {tabs.length === 0 ? (
-                    <div className="code-editor-empty">
-                      <p>Open a file from the sidebar to start editing</p>
-                    </div>
-                  ) : (
-                    <pre className="code-editor-text">
-                      {tabs.find(t => t.id === activeTab)?.content || ''}
-                    </pre>
-                  )}
-                </div>
+          <div className="editor-and-ai">
+            <div className="code-editor">
+              <div className="code-editor-content">
+                {tabs.length === 0 ? (
+                  <div className="code-editor-empty">
+                    <p>Open a file from the sidebar to start editing</p>
+                  </div>
+                ) : (
+                  <pre className="code-editor-text">
+                    {activeTabData?.content || ''}
+                  </pre>
+                )}
               </div>
-            }
-            right={showAIPanel ? (
+            </div>
+
+            {showAIPanel && (
               <div className="ai-panel">
                 <div className="ai-panel-header">
                   <span>AI Chat</span>
                   <span className="ai-provider-badge">{settings.defaultProvider}</span>
+                  <button className="ai-close-btn" onClick={() => setShowAIPanel(false)}>X</button>
                 </div>
                 <div className="ai-messages">
                   {aiMessages.map((msg, i) => (
@@ -258,8 +228,8 @@ export const MainLayout: React.FC = () => {
                   </button>
                 </div>
               </div>
-            ) : null}
-          </SplitPane>
+            )}
+          </div>
 
           <div className="bottom-area">
             <div className="bottom-tabs">
@@ -272,6 +242,11 @@ export const MainLayout: React.FC = () => {
                   {tab}
                 </button>
               ))}
+              {!showAIPanel && (
+                <button className="bottom-tab" onClick={() => setShowAIPanel(true)}>
+                  AI Chat
+                </button>
+              )}
             </div>
             <div className="bottom-content">
               {activeBottomTab === 'Terminal' && (
@@ -323,7 +298,7 @@ export const MainLayout: React.FC = () => {
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
     </div>
   );
-};
+}
 
 function getLanguage(path: string): string {
   const ext = path.split('.').pop()?.toLowerCase() || '';

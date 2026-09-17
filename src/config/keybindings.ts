@@ -35,7 +35,7 @@ export const getKeybindingsByCategory = (): Record<string, Keybinding[]> => {
     if (!acc[kb.category]) {
       acc[kb.category] = [];
     }
-    acc[kb.category].push(kb);
+    acc[kb.category]!.push(kb);
     return acc;
   }, {} as Record<string, Keybinding[]>);
 };

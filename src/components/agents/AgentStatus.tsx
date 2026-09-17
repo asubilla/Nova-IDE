@@ -37,7 +37,7 @@ export default function AgentStatus() {
         )}
 
         {agents.map((agent) => {
-          const cfg = statusConfig[agent.status] ?? statusConfig.waiting;
+          const cfg = statusConfig[agent.status] ?? statusConfig.waiting!;
           return (
             <div
               key={agent.id}

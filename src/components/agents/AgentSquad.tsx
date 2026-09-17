@@ -1,4 +1,5 @@
 import { useState } from 'react';
+
 import { useAgentStore } from '../../store/agentStore';
 
 const agentNames = [
@@ -20,8 +21,8 @@ export default function AgentSquad() {
   const handleLaunch = () => {
     const tasks = ['Analyze codebase', 'Generate tests', 'Refactor modules', 'Review PRs', 'Update docs'];
     for (let i = 0; i < count; i++) {
-      const name = agentNames[i % agentNames.length];
-      const task = tasks[i % tasks.length];
+      const name = agentNames[i % agentNames.length]!;
+      const task = tasks[i % tasks.length]!;
       spawnAgent(name, task);
     }
     setLaunched(true);
