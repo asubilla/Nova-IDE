@@ -1,9 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
 
 import { SettingsPanel } from '../settings/SettingsPanel';
 import AgentMonitor from '../agents/AgentMonitor';
 import { terminalAPI } from '../../api/terminal';
+import { useNotifications } from '../../hooks/useNotifications';
 
 import { TitleBar } from './TitleBar';
 import { ActivityBar } from './ActivityBar';
@@ -67,6 +69,7 @@ export function MainLayout() {
   });
 
   const [agents, setAgents] = useState<Agent[]>([]);
+  const notify = useNotifications();
 
   useEffect(() => {
     const loadAgents = async () => {
@@ -83,15 +86,43 @@ export function MainLayout() {
   }, []);
 
   useEffect(() => {
+    const unlisten = listen<{ agentId: string; progress: number }>('agent-progress', (event) => {
+      setAgents((prev) =>
+        prev.map((a) =>
+          a.id === event.payload.agentId
+            ? { ...a, progress: event.payload.progress }
+            : a
+        )
+      );
+      if (event.payload.progress >= 100) {
+        notify.success('Agent completed', `Task finished successfully`);
+      }
+    });
+    return () => { unlisten.then((fn) => fn()); };
+  }, [notify]);
+
+  useEffect(() => {
+    const unlisten = listen<string>('ai-token', () => {});
+    const unlistenComplete = listen<string>('ai-stream-complete', () => {
+      notify.info('AI response complete');
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+      unlistenComplete.then((fn) => fn());
+    };
+  }, [notify]);
+
+  useEffect(() => {
     const initTerminal = async () => {
       try {
         await terminalAPI.spawn('main', '~');
+        notify.success('Terminal ready');
       } catch (e) {
-        console.error('Failed to spawn terminal:', e);
+        notify.error('Terminal failed', String(e));
       }
     };
     initTerminal();
-  }, []);
+  }, [notify]);
 
   const handleTerminalCommand = useCallback(async (command: string) => {
     if (!command.trim()) return;
@@ -122,35 +153,42 @@ export function MainLayout() {
     setAiMessages(prev => [...prev, userMessage]);
     setAiInput('');
     setAiLoading(true);
+    const loadingId = notify.loading('AI thinking...');
     try {
       const response = await invoke<string>('send_ai_message', {
-        providerId: settings.defaultProvider,
+        provider_id: settings.defaultProvider,
         model: 'gpt-4',
         messages: [...aiMessages, userMessage].map(m => ({ role: m.role, content: m.content })),
       });
       setAiMessages(prev => [...prev, { role: 'assistant', content: response }]);
+      notify.dismiss(loadingId);
+      notify.success('AI response received');
     } catch (e) {
       setAiMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e}` }]);
+      notify.dismiss(loadingId);
+      notify.error('AI request failed', String(e));
     }
     setAiLoading(false);
-  }, [aiInput, aiMessages, aiLoading, settings.defaultProvider]);
+  }, [aiInput, aiMessages, aiLoading, settings.defaultProvider, notify]);
 
   const handleOpenFile = useCallback(async (path: string) => {
     try {
       const content = await invoke<string>('read_file', { path });
+      const name = path.split(/[/\\]/).pop() || path;
       const newTab: EditorTab = {
         id: Date.now().toString(),
-        name: path.split(/[/\\]/).pop() || path,
+        name,
         language: getLanguage(path),
         content,
         modified: false,
       };
       setTabs(prev => [...prev, newTab]);
       setActiveTab(newTab.id);
+      notify.success('File opened', name);
     } catch (e) {
-      console.error('Failed to open file:', e);
+      notify.error('Failed to open file', String(e));
     }
-  }, []);
+  }, [notify]);
 
   const activeTabData = tabs.find(t => t.id === activeTab);
 

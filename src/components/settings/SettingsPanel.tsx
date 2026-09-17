@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { AISettings } from './AISettings';
 import { settingsAPI, type AppSettings } from '../../api/settings';
+import { useNotifications } from '../../hooks/useNotifications';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -20,6 +21,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('ai');
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [loading, setLoading] = useState(true);
+  const notify = useNotifications();
 
   useEffect(() => {
     settingsAPI.get().then((s) => {
@@ -34,8 +36,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ onClose }) => {
       const updated = { ...settings, [key]: value };
       setSettings(updated);
       settingsAPI.update(updated);
+      notify.success('Setting saved', `${String(key)} updated`);
     },
-    [settings]
+    [settings, notify]
   );
 
   if (loading || !settings) {

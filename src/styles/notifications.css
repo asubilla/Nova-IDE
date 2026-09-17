@@ -1,0 +1,45 @@
+@keyframes nova-notification-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(120%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes nova-notification-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes nova-notification-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.nova-notification-spin {
+  animation: nova-notification-spin 1s linear infinite;
+}
+
+.nova-notification:hover {
+  filter: brightness(1.1);
+}
+
+.nova-notification-action:hover {
+  text-decoration: underline !important;
+}
+
+.nova-notification-close:hover {
+  color: #fff !important;
+}
+
+.nova-notification-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.nova-notification-container::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
