@@ -9,7 +9,7 @@ const THEME = {
   green: '#00e676',
 };
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG: Record<string, { icon: string; color: string; label: string }> = {
   retry: { icon: '\u{1F504}', color: '#ffab40', label: 'Retry' },
   fix: { icon: '\u{2705}', color: THEME.green, label: 'Fixed' },
   error: { icon: '\u{274C}', color: '#ff5252', label: 'Error' },
@@ -55,7 +55,7 @@ export default function HealingLog() {
         )}
 
         {events.map((event) => {
-          const config = TYPE_CONFIG[event.type];
+          const config = TYPE_CONFIG[event.eventType] ?? { icon: '?', color: '#888', label: event.eventType };
           const time = new Date(event.timestamp);
 
           return (

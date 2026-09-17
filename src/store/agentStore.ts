@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Agent, AgentStatus, Task, TaskStatus } from '../types/agent';
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -23,16 +24,18 @@ const initialTasks: Task[] = [
   { id: uid(), title: 'Update README', description: '', status: 'done', assigneeId: null, createdAt: Date.now() },
 ];
 
-export const useAgentStore = create<AgentState>((set) => ({
-  agents: [],
-  tasks: initialTasks,
+export const useAgentStore = create<AgentState>()(
+  persist(
+    (set) => ({
+      agents: [],
+      tasks: initialTasks,
 
   spawnAgent: (name, task) => {
     const id = uid();
     set((s) => ({
       agents: [
         ...s.agents,
-        { id, name, status: 'running', task, progress: 0, startTime: Date.now() },
+        { id, name, status: 'running', task, progress: 0, createdAt: new Date().toISOString(), logs: [] },
       ],
     }));
     return id;
@@ -77,4 +80,13 @@ export const useAgentStore = create<AgentState>((set) => ({
     set((s) => ({
       tasks: s.tasks.filter((t) => t.id !== id),
     })),
-}));
+}),
+    {
+      name: 'nova-agent-store',
+      partialize: (state) => ({
+        agents: state.agents,
+        tasks: state.tasks,
+      }),
+    },
+  )
+);

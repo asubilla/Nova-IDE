@@ -3,8 +3,12 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::{AppHandle, Emitter};
+
+use super::error::CommandError;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Agent {
     pub id: String,
     pub name: String,
@@ -38,7 +42,7 @@ fn current_timestamp() -> String {
 }
 
 #[tauri::command]
-pub async fn spawn_agent(name: String, task: String) -> Result<Agent, String> {
+pub async fn spawn_agent(app: AppHandle, name: String, task: String) -> Result<Agent, CommandError> {
     let id = generate_id();
     let agent = Agent {
         id: id.clone(),
@@ -54,8 +58,52 @@ pub async fn spawn_agent(name: String, task: String) -> Result<Agent, String> {
         ],
     };
 
-    let mut agents = get_agents().lock().map_err(|e| e.to_string())?;
-    agents.insert(id.clone(), agent.clone());
+    {
+        let mut agents = get_agents().lock().map_err(|e| e.to_string())?;
+        agents.insert(id.clone(), agent.clone());
+    }
+
+    let agent_id = id.clone();
+    let agent_name = name.clone();
+    tokio::spawn(async move {
+        let steps = 10;
+        for i in 1..=steps {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+
+            let progress = i as f32 / steps as f32;
+            let log_msg = format!(
+                "[{}] Progress update: {}%",
+                current_timestamp(),
+                (progress * 100.0) as u32
+            );
+
+            let mut agents = match get_agents().lock() {
+                Ok(agents) => agents,
+                Err(_) => return,
+            };
+
+            if let Some(agent) = agents.get_mut(&agent_id) {
+                agent.progress = progress;
+                agent.logs.push(log_msg);
+
+                if progress >= 1.0 {
+                    agent.status = "done".to_string();
+                    agent.logs.push(format!(
+                        "[{}] Agent '{}' completed task",
+                        current_timestamp(),
+                        agent_name
+                    ));
+                }
+
+                let snapshot = agent.clone();
+                drop(agents);
+
+                let _ = app.emit("agent-progress", &snapshot);
+            } else {
+                break;
+            }
+        }
+    });
 
     Ok(agent)
 }

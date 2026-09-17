@@ -8,6 +8,15 @@ export class NovaError extends Error {
     this.code = code;
     this.details = details;
   }
+
+  toJSON() {
+    return {
+      name: this.name,
+      message: this.message,
+      code: this.code,
+      details: this.details,
+    };
+  }
 }
 
 export class AIProviderError extends NovaError {
@@ -51,5 +60,20 @@ export class BrowserError extends NovaError {
     super(message, 'BROWSER_ERROR', details);
     this.name = 'BrowserError';
     this.url = url;
+  }
+}
+
+export function createNovaError(type: string, message: string, details?: unknown): NovaError {
+  switch (type) {
+    case 'AI_PROVIDER_ERROR':
+      return new AIProviderError(message, 'unknown', undefined, details);
+    case 'AGENT_ERROR':
+      return new AgentError(message, 'unknown', details);
+    case 'MCP_ERROR':
+      return new MCPError(message, 'unknown', 'unknown', details);
+    case 'BROWSER_ERROR':
+      return new BrowserError(message, undefined, details);
+    default:
+      return new NovaError(message, type, details);
   }
 }

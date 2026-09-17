@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct BrowserPage {
     pub url: String,
     pub title: String,
@@ -10,6 +11,7 @@ pub struct BrowserPage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DOMNode {
     pub tag: String,
     pub attributes: HashMap<String, String>,
@@ -78,7 +80,7 @@ pub async fn browser_navigate(url: String) -> Result<BrowserPage, String> {
 }
 
 #[tauri::command]
-pub async fn browser_screenshot() -> Result<String, String> {
+pub async fn browser_screenshot() -> Result<serde_json::Value, String> {
     let state = get_browser_state().lock().map_err(|e| e.to_string())?;
 
     let page = state
@@ -92,10 +94,12 @@ pub async fn browser_screenshot() -> Result<String, String> {
         "No DOM available".to_string()
     };
 
-    Ok(format!(
-        "Screenshot of: {} ({})\n\nDOM Preview:\n{}",
-        page.title, page.url, dom_snapshot
-    ))
+    Ok(serde_json::json!({
+        "url": page.url,
+        "title": page.title,
+        "html": dom_snapshot,
+        "status": page.status,
+    }))
 }
 
 #[tauri::command]
@@ -110,40 +114,79 @@ pub async fn browser_inspect() -> Result<DOMNode, String> {
 
 #[tauri::command]
 pub async fn browser_act(action: String) -> Result<String, String> {
-    let mut state = get_browser_state().lock().map_err(|e| e.to_string())?;
-
-    let current_url = state.current_url.clone();
-    if current_url.is_empty() {
-        return Err("No page loaded. Navigate to a URL first.".to_string());
-    }
-
     let parts: Vec<&str> = action.splitn(2, ' ').collect();
     let command = parts[0].to_lowercase();
     let arg = parts.get(1).unwrap_or(&"");
 
-    match command.as_str() {
+    let url_to_fetch = match command.as_str() {
         "back" => {
-            if state.history.len() > 1 {
-                state.history.pop();
-                let prev_url = state.history.last().cloned().unwrap_or_default();
-                state.current_url = prev_url.clone();
-                Ok(format!("Navigated back to: {}", prev_url))
-            } else {
-                Ok("No history to go back to".to_string())
-            }
-        }
-        "forward" => {
-            Ok("No forward history available".to_string())
+            let url = {
+                let mut state = get_browser_state().lock().map_err(|e| e.to_string())?;
+                if state.history.len() > 1 {
+                    state.history.pop();
+                    let prev_url = state.history.last().cloned().unwrap_or_default();
+                    state.current_url = prev_url.clone();
+                    prev_url
+                } else {
+                    return Ok("No history to go back to".to_string());
+                }
+            };
+            Some(url)
         }
         "refresh" => {
-            Ok(format!("Refreshed: {}", current_url))
+            let url = {
+                let state = get_browser_state().lock().map_err(|e| e.to_string())?;
+                state.current_url.clone()
+            };
+            if url.is_empty() {
+                return Err("No page loaded. Navigate to a URL first.".to_string());
+            }
+            Some(url)
         }
-        "click" => {
-            Ok(format!("Clicked element: {} on {}", arg, current_url))
-        }
-        "type" => {
-            Ok(format!("Typed '{}' on {}", arg, current_url))
-        }
+        _ => None,
+    };
+
+    if let Some(url) = url_to_fetch {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(30))
+            .build()
+            .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+
+        let response = client
+            .get(&url)
+            .header("User-Agent", "NovaIDE/1.0 Browser")
+            .send()
+            .await
+            .map_err(|e| format!("Failed to navigate to {}: {}", url, e))?;
+
+        let status_code = response.status().as_u16();
+        let final_url = response.url().to_string();
+        let body = response
+            .text()
+            .await
+            .map_err(|e| format!("Failed to read page: {}", e))?;
+        let title = extract_title(&body);
+        let dom = parse_html_to_dom(&body);
+
+        let mut state = get_browser_state().lock().map_err(|e| e.to_string())?;
+        state.current_url = final_url.clone();
+        state.current_page = Some(BrowserPage {
+            url: final_url,
+            title,
+            status: format!("{} OK", status_code),
+        });
+        state.dom = Some(dom);
+    }
+
+    let mut state = get_browser_state().lock().map_err(|e| e.to_string())?;
+    let current_url = state.current_url.clone();
+
+    match command.as_str() {
+        "back" => Ok(format!("Navigated back to: {}", current_url)),
+        "refresh" => Ok(format!("Refreshed: {}", current_url)),
+        "forward" => Ok("No forward history available".to_string()),
+        "click" => Ok(format!("Clicked element: {} on {}", arg, current_url)),
+        "type" => Ok(format!("Typed '{}' on {}", arg, current_url)),
         "scroll" => {
             let direction = if arg.is_empty() { "down" } else { arg };
             Ok(format!("Scrolled {} on {}", direction, current_url))
@@ -154,9 +197,12 @@ pub async fn browser_act(action: String) -> Result<String, String> {
             Ok(format!("Waited {}ms", ms))
         }
         "evaluate" => {
-            Ok(format!("Evaluated JS on {}: {}", current_url, arg))
+            Ok(format!("JavaScript evaluation is not supported in the headless browser. URL: {}. Use browser_navigate to load a page and browser_inspect to view its DOM.", current_url))
         }
-        _ => Err(format!("Unknown action: {}. Available: back, forward, refresh, click, type, scroll, wait, evaluate", command)),
+        _ => Err(format!(
+            "Unknown action: {}. Available: back, forward, refresh, click, type, scroll, wait, evaluate",
+            command
+        )),
     }
 }
 

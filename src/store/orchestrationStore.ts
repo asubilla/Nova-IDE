@@ -12,6 +12,24 @@ interface OrchestrationState {
   getState: () => OrchestrationState;
 }
 
+const STORAGE_KEY = 'nova-orchestration-store';
+
+function loadFromStorage(): { executionHistory: OrchestrationResult[]; currentWorkflow: OrchestrationResult | null } | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorage(data: { executionHistory: OrchestrationResult[]; currentWorkflow: OrchestrationResult | null }) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch { /* ignore */ }
+}
+
 const defaultPatterns: PatternConfig[] = [
   {
     id: 'sequential-code-review',
@@ -51,10 +69,12 @@ const defaultPatterns: PatternConfig[] = [
 ];
 
 export const createOrchestrationStore = (): OrchestrationState => {
+  const saved = loadFromStorage();
+
   let state: OrchestrationState = {
     patterns: defaultPatterns,
-    currentWorkflow: null,
-    executionHistory: [],
+    currentWorkflow: saved?.currentWorkflow ?? null,
+    executionHistory: saved?.executionHistory ?? [],
     executePattern: () => {},
     getAvailablePatterns: () => [],
     cancelExecution: () => {},
@@ -67,6 +87,7 @@ export const createOrchestrationStore = (): OrchestrationState => {
 
   const setState = (partial: Partial<OrchestrationState>) => {
     state = { ...state, ...partial };
+    saveToStorage({ executionHistory: state.executionHistory, currentWorkflow: state.currentWorkflow });
     listeners.forEach((l) => l());
   };
 

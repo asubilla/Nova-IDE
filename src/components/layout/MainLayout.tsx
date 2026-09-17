@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 import { SettingsPanel } from '../settings/SettingsPanel';
 import AgentMonitor from '../agents/AgentMonitor';
+import { terminalAPI } from '../../api/terminal';
 
 import { TitleBar } from './TitleBar';
 import { ActivityBar } from './ActivityBar';
@@ -81,6 +82,17 @@ export function MainLayout() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    const initTerminal = async () => {
+      try {
+        await terminalAPI.spawn('main', '~');
+      } catch (e) {
+        console.error('Failed to spawn terminal:', e);
+      }
+    };
+    initTerminal();
+  }, []);
+
   const handleTerminalCommand = useCallback(async (command: string) => {
     if (!command.trim()) return;
     setTerminalLines(prev => [...prev, `$ ${command}`]);
@@ -93,8 +105,10 @@ export function MainLayout() {
         const list = agents.map(a => `  ${a.name} [${a.status}] ${a.progress}%`).join('\n');
         setTerminalLines(prev => [...prev, list || '  No active agents', '']);
       } else {
-        const result = await invoke<string>('send_input', { id: 'main', input: command });
-        setTerminalLines(prev => [...prev, result]);
+        const result = await terminalAPI.sendInput('main', command);
+        if (result.output) {
+          setTerminalLines(prev => [...prev, result.output]);
+        }
       }
     } catch (e) {
       setTerminalLines(prev => [...prev, `Error: ${e}`]);

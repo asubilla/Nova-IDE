@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 import type { Board, Card, CardStatus } from '../types/kanban';
 
@@ -50,8 +51,10 @@ const initialBoard: Board = {
   ],
 };
 
-export const useKanbanStore = create<KanbanState>((set) => ({
-  board: initialBoard,
+export const useKanbanStore = create<KanbanState>()(
+  persist(
+    (set) => ({
+      board: initialBoard,
 
   moveCard: (cardId, from, to) =>
     set((s) => {
@@ -122,4 +125,12 @@ export const useKanbanStore = create<KanbanState>((set) => ({
         ),
       },
     })),
-}));
+}),
+    {
+      name: 'nova-kanban-store',
+      partialize: (state) => ({
+        board: state.board,
+      }),
+    },
+  )
+);

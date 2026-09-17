@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::process::Command;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MCPServer {
     pub name: String,
     pub description: String,
@@ -11,6 +12,7 @@ pub struct MCPServer {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct MCPTool {
     pub name: String,
     pub description: String,
@@ -361,7 +363,7 @@ pub async fn execute_mcp_tool(
             }))
         }
         ("terminal", "list_processes") => {
-            let output = std::process::Command::new("cmd")
+            let output = Command::new("cmd")
                 .args(["/C", "tasklist"])
                 .output()
                 .map_err(|e| format!("Failed to list processes: {}", e))?;
@@ -369,6 +371,163 @@ pub async fn execute_mcp_tool(
             Ok(serde_json::json!({
                 "success": true,
                 "output": stdout,
+            }))
+        }
+        ("git", "git_status") => {
+            let repo_path = args["repo_path"]
+                .as_str()
+                .ok_or_else(|| "Missing 'repo_path' parameter".to_string())?;
+            let result = super::git::git_status(repo_path.to_string())?;
+            Ok(serde_json::to_value(result)
+                .map_err(|e| format!("Failed to serialize result: {}", e))?)
+        }
+        ("git", "git_diff") => {
+            let repo_path = args["repo_path"]
+                .as_str()
+                .ok_or_else(|| "Missing 'repo_path' parameter".to_string())?;
+            let result = super::git::git_diff(repo_path.to_string())?;
+            Ok(serde_json::to_value(result)
+                .map_err(|e| format!("Failed to serialize result: {}", e))?)
+        }
+        ("git", "git_log") => {
+            let repo_path = args["repo_path"]
+                .as_str()
+                .ok_or_else(|| "Missing 'repo_path' parameter".to_string())?;
+            let limit = args["limit"].as_u64().unwrap_or(10);
+            let output = Command::new("git")
+                .args(["log", &format!("--oneline -{}", limit)])
+                .current_dir(repo_path)
+                .output()
+                .map_err(|e| format!("Failed to run git log: {}", e))?;
+            let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr).to_string();
+                return Err(format!("git log failed: {}", stderr));
+            }
+            Ok(serde_json::json!({
+                "success": true,
+                "output": stdout,
+            }))
+        }
+        ("web", "fetch_url") => {
+            let url = args["url"]
+                .as_str()
+                .ok_or_else(|| "Missing 'url' parameter".to_string())?;
+            let client = reqwest::Client::builder()
+                .timeout(std::time::Duration::from_secs(30))
+                .build()
+                .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+            let response = client
+                .get(url)
+                .header("User-Agent", "NovaIDE/1.0")
+                .send()
+                .await
+                .map_err(|e| format!("Failed to fetch URL: {}", e))?;
+            let status = response.status().as_u16();
+            let body = response
+                .text()
+                .await
+                .map_err(|e| format!("Failed to read response: {}", e))?;
+            Ok(serde_json::json!({
+                "success": true,
+                "status": status,
+                "body": body,
+                "url": url,
+            }))
+        }
+        ("web", "web_search") => {
+            Ok(serde_json::json!({
+                "success": false,
+                "error": "Search requires API key configuration. Please configure a search API key in Settings.",
+            }))
+        }
+        ("code_analysis", "analyze_syntax") => {
+            let code = args["code"]
+                .as_str()
+                .ok_or_else(|| "Missing 'code' parameter".to_string())?;
+            let language = args["language"]
+                .as_str()
+                .ok_or_else(|| "Missing 'language' parameter".to_string())?;
+            let mut issues: Vec<String> = Vec::new();
+            let mut line_num = 0;
+            for line in code.lines() {
+                line_num += 1;
+                let trimmed = line.trim();
+                if trimmed.is_empty() || trimmed.starts_with("//") || trimmed.starts_with('#') {
+                    continue;
+                }
+                if (language == "javascript" || language == "typescript")
+                    && trimmed.contains("console.log")
+                {
+                    issues.push(format!("Line {}: console.log statement found", line_num));
+                }
+                if trimmed.ends_with(';')
+                    || trimmed.ends_with('{')
+                    || trimmed.ends_with('}')
+                    || trimmed.ends_with(',')
+                {
+                } else if !trimmed.starts_with("//")
+                    && !trimmed.starts_with("/*")
+                    && !trimmed.starts_with('*')
+                    && !trimmed.is_empty()
+                    && trimmed.len() > 3
+                    && !trimmed.ends_with(':')
+                    && !trimmed.ends_with('(')
+                    && !trimmed.ends_with(')')
+                    && !trimmed.starts_with("import")
+                    && !trimmed.starts_with("export")
+                {
+                    issues.push(format!(
+                        "Line {}: possible missing semicolon or incomplete statement",
+                        line_num
+                    ));
+                }
+            }
+            Ok(serde_json::json!({
+                "success": true,
+                "language": language,
+                "lines_analyzed": line_num,
+                "issues": issues,
+                "issue_count": issues.len(),
+            }))
+        }
+        ("code_analysis", "find_references") => {
+            let directory = args["directory"]
+                .as_str()
+                .ok_or_else(|| "Missing 'directory' parameter".to_string())?;
+            let symbol = args["symbol"]
+                .as_str()
+                .ok_or_else(|| "Missing 'symbol' parameter".to_string())?;
+            let mut results: Vec<serde_json::Value> = Vec::new();
+            if let Ok(entries) = std::fs::read_dir(directory) {
+                for entry in entries.filter_map(|e| e.ok()) {
+                    let path = entry.path();
+                    if path.is_file() {
+                        if let Ok(content) = std::fs::read_to_string(&path) {
+                            for (i, line) in content.lines().enumerate() {
+                                if line.contains(symbol) {
+                                    results.push(serde_json::json!({
+                                        "file": path.to_string_lossy(),
+                                        "line": i + 1,
+                                        "content": line.trim(),
+                                    }));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Ok(serde_json::json!({
+                "success": true,
+                "symbol": symbol,
+                "references": results,
+                "count": results.len(),
+            }))
+        }
+        ("database", "query_sql") | ("database", "list_tables") => {
+            Ok(serde_json::json!({
+                "success": false,
+                "error": "Database not configured. Please configure a database connection in Settings.",
             }))
         }
         _ => Err(format!(

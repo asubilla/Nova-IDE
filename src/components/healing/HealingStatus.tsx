@@ -13,10 +13,10 @@ export default function HealingStatus() {
   const { events } = useHealingStore();
   const today = new Date().toDateString();
   const todayRepairs = events.filter(
-    (e) => (e.type === 'fix' || e.type === 'success') && new Date(e.timestamp).toDateString() === today
+    (e) => (e.eventType === 'fix' || e.eventType === 'success') && new Date(e.timestamp).toDateString() === today
   ).length;
   const todayErrors = events.filter(
-    (e) => e.type === 'error' && new Date(e.timestamp).toDateString() === today
+    (e) => e.eventType === 'error' && new Date(e.timestamp).toDateString() === today
   ).length;
 
   return (

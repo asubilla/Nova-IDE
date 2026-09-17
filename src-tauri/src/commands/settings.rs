@@ -4,12 +4,18 @@ use std::path::PathBuf;
 use std::sync::{Mutex, OnceLock};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AppSettings {
     pub theme: String,
     pub font_size: u32,
     pub tab_size: u32,
     pub auto_save: bool,
     pub default_provider: String,
+    pub default_model: String,
+    pub minimap: bool,
+    pub line_numbers: bool,
+    pub word_wrap: bool,
+    pub font_family: String,
 }
 
 static SETTINGS: OnceLock<Mutex<Option<AppSettings>>> = OnceLock::new();
@@ -25,6 +31,11 @@ fn default_settings() -> AppSettings {
         tab_size: 4,
         auto_save: true,
         default_provider: "openai".to_string(),
+        default_model: "gpt-4o".to_string(),
+        minimap: true,
+        line_numbers: true,
+        word_wrap: false,
+        font_family: "JetBrains Mono, monospace".to_string(),
     }
 }
 

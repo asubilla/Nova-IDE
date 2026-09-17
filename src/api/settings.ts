@@ -1,15 +1,16 @@
 import { tauriInvoke } from './tauri';
 
 export interface AppSettings {
-  theme: 'dark' | 'light';
+  theme: string;
   fontSize: number;
   tabSize: number;
-  wordWrap: boolean;
-  minimap: boolean;
-  lineNumbers: boolean;
+  autoSave: boolean;
   defaultProvider: string;
   defaultModel: string;
-  autoSave: boolean;
+  minimap: boolean;
+  lineNumbers: boolean;
+  wordWrap: boolean;
+  fontFamily: string;
 }
 
 export const settingsAPI = {

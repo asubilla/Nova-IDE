@@ -1,3 +1,4 @@
+// Utility available for future use
 type EventMap = Record<string, unknown>;
 
 type Listener<T> = (data: T) => void;

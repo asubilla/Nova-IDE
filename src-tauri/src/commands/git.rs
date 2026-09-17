@@ -2,29 +2,34 @@ use serde::Serialize;
 use std::process::Command;
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitStatusResult {
     pub branch: String,
     pub files: Vec<GitFileStatus>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitFileStatus {
     pub path: String,
     pub status: String,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitDiffResult {
     pub files: Vec<GitDiffFile>,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitDiffFile {
     pub path: String,
     pub diff: String,
 }
 
 #[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct GitCommitResult {
     pub success: bool,
     pub message: String,
@@ -78,14 +83,30 @@ pub fn git_diff(cwd: String) -> Result<GitDiffResult, String> {
 
     let diff_str = String::from_utf8_lossy(&diff_output.stdout).to_string();
 
+    let chunks: Vec<&str> = diff_str.split("diff --git ").collect();
+    let mut diff_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    for chunk in &chunks[1..] {
+        if let Some(end) = chunk.find("\ndiff --git ") {
+            let header = &chunk[..end];
+            let rest = &chunk[..end];
+            if let Some(name_start) = rest.find(" b/") {
+                let path = rest[name_start + 3..].trim().to_string();
+                diff_map.insert(path, format!("diff --git {}", header));
+            }
+        } else {
+            if let Some(name_start) = chunk.find(" b/") {
+                let path = chunk[name_start + 3..].trim().to_string();
+                diff_map.insert(path, format!("diff --git {}", chunk));
+            }
+        }
+    }
+
     let mut files = Vec::new();
     for line in stat_str.lines() {
         if let Some(pos) = line.find('|') {
             let path = line[..pos].trim().to_string();
-            files.push(GitDiffFile {
-                path,
-                diff: diff_str.clone(),
-            });
+            let diff = diff_map.get(&path).cloned().unwrap_or_default();
+            files.push(GitDiffFile { path, diff });
         }
     }
 

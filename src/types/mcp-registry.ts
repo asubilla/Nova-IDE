@@ -1,7 +1,7 @@
 export interface MCPTool {
   name: string;
   description: string;
-  params: Record<string, string>;
+  parameters: Record<string, unknown>;
 }
 
 export interface MCPServer {

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Message, Provider, ToolCall } from '../types/ai';
+import { aiAPI } from '../api/ai';
 
 interface AIState {
   messages: Message[];
@@ -17,7 +19,9 @@ interface AIState {
 
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-export const useAIStore = create<AIState>((set, get) => ({
+export const useAIStore = create<AIState>()(
+  persist(
+    (set, get) => ({
   messages: [],
   currentProvider: null,
   currentModel: '',
@@ -80,19 +84,43 @@ export const useAIStore = create<AIState>((set, get) => ({
     };
     set({ messages: [...get().messages, assistantMessage] });
 
-    // Simulated streaming response — replace with real API call
-    const simulatedResponse = `I've analyzed your request: "${content}"\n\nHere's what I can help with:\n- Code analysis and suggestions\n- File operations\n- Debugging assistance\n- Architecture recommendations`;
+    try {
+      const allMessages = [
+        ...state.messages
+          .filter((m) => m.role === 'user' || m.role === 'assistant')
+          .map((m) => ({ id: m.id, role: m.role, content: m.content, timestamp: m.timestamp, toolCalls: m.toolCalls ?? undefined })),
+        { id: crypto.randomUUID(), role: 'user' as const, content, timestamp: Date.now() },
+      ];
 
-    const words = simulatedResponse.split(' ');
-    let accumulated = '';
-    for (let i = 0; i < words.length; i++) {
-      await new Promise((r) => setTimeout(r, 30));
-      accumulated += (i > 0 ? ' ' : '') + words[i];
+      const response = await aiAPI.sendMessage(
+        state.currentProvider.id,
+        state.currentModel,
+        allMessages,
+      );
+
       set({
         messages: get().messages.map((msg) =>
-          msg.id === assistantMessage.id ? { ...msg, content: accumulated } : msg
+          msg.id === assistantMessage.id ? { ...msg, content: response } : msg
+        ),
+      });
+    } catch (err) {
+      set({
+        messages: get().messages.map((msg) =>
+          msg.id === assistantMessage.id
+            ? { ...msg, content: `Error: ${err instanceof Error ? err.message : 'Unknown error'}` }
+            : msg
         ),
       });
     }
   },
-}));
+}),
+    {
+      name: 'nova-ai-store',
+      partialize: (state) => ({
+        messages: state.messages,
+        currentProvider: state.currentProvider,
+        currentModel: state.currentModel,
+      }),
+    },
+  )
+);

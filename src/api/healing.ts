@@ -3,10 +3,12 @@ import type { HealingEvent } from '../types/healing';
 
 export interface HealingStats {
   totalEvents: number;
-  errorCount: number;
-  retryCount: number;
-  fixCount: number;
-  successCount: number;
+  successfulHeals: number;
+  failedHeals: number;
+  autoHeals: number;
+  manualHeals: number;
+  uptimeSeconds: number;
+  healthScore: number;
 }
 
 export const healingAPI = {
@@ -14,7 +16,7 @@ export const healingAPI = {
     tauriInvoke<HealingEvent[]>('get_healing_log'),
 
   triggerHeal: (agentId: string) =>
-    tauriInvoke<string>('trigger_heal', { agentId }),
+    tauriInvoke<string>('trigger_heal', { agent_id: agentId }),
 
   getStats: () =>
     tauriInvoke<HealingStats>('get_healing_stats'),

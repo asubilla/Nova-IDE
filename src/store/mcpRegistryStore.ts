@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { MCPServer, ToolExecution } from '../types/mcp-registry';
 
 const PRELOADED_SERVERS: MCPServer[] = [
@@ -7,10 +8,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Manage repos, issues, PRs, and workflows via GitHub API',
     category: 'Development',
     tools: [
-      { name: 'create_issue', description: 'Create a new issue', params: { repo: 'string', title: 'string', body: 'string' } },
-      { name: 'list_prs', description: 'List pull requests', params: { repo: 'string' } },
-      { name: 'merge_pr', description: 'Merge a pull request', params: { repo: 'string', pr_number: 'number' } },
-      { name: 'search_code', description: 'Search code across repos', params: { query: 'string' } },
+      { name: 'create_issue', description: 'Create a new issue', parameters: { repo: 'string', title: 'string', body: 'string' } },
+      { name: 'list_prs', description: 'List pull requests', parameters: { repo: 'string' } },
+      { name: 'merge_pr', description: 'Merge a pull request', parameters: { repo: 'string', pr_number: 'number' } },
+      { name: 'search_code', description: 'Search code across repos', parameters: { query: 'string' } },
     ],
   },
   {
@@ -18,10 +19,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Browser automation for testing and scraping',
     category: 'Testing',
     tools: [
-      { name: 'navigate', description: 'Navigate to URL', params: { url: 'string' } },
-      { name: 'click', description: 'Click an element', params: { selector: 'string' } },
-      { name: 'screenshot', description: 'Take page screenshot', params: { path: 'string' } },
-      { name: 'fill_form', description: 'Fill form fields', params: { fields: 'object' } },
+      { name: 'navigate', description: 'Navigate to URL', parameters: { url: 'string' } },
+      { name: 'click', description: 'Click an element', parameters: { selector: 'string' } },
+      { name: 'screenshot', description: 'Take page screenshot', parameters: { path: 'string' } },
+      { name: 'fill_form', description: 'Fill form fields', parameters: { fields: 'object' } },
     ],
   },
   {
@@ -29,10 +30,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Database queries, auth, and real-time subscriptions',
     category: 'Database',
     tools: [
-      { name: 'query', description: 'Run SQL query', params: { sql: 'string' } },
-      { name: 'insert', description: 'Insert row', params: { table: 'string', data: 'object' } },
-      { name: 'auth_sign_in', description: 'Sign in user', params: { email: 'string', password: 'string' } },
-      { name: 'subscribe', description: 'Subscribe to changes', params: { table: 'string' } },
+      { name: 'query', description: 'Run SQL query', parameters: { sql: 'string' } },
+      { name: 'insert', description: 'Insert row', parameters: { table: 'string', data: 'object' } },
+      { name: 'auth_sign_in', description: 'Sign in user', parameters: { email: 'string', password: 'string' } },
+      { name: 'subscribe', description: 'Subscribe to changes', parameters: { table: 'string' } },
     ],
   },
   {
@@ -40,10 +41,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Payment processing and subscription management',
     category: 'Payments',
     tools: [
-      { name: 'create_payment', description: 'Create payment intent', params: { amount: 'number', currency: 'string' } },
-      { name: 'create_customer', description: 'Create customer', params: { email: 'string', name: 'string' } },
-      { name: 'list_invoices', description: 'List invoices', params: { customer: 'string' } },
-      { name: 'refund', description: 'Refund a payment', params: { payment_id: 'string' } },
+      { name: 'create_payment', description: 'Create payment intent', parameters: { amount: 'number', currency: 'string' } },
+      { name: 'create_customer', description: 'Create customer', parameters: { email: 'string', name: 'string' } },
+      { name: 'list_invoices', description: 'List invoices', parameters: { customer: 'string' } },
+      { name: 'refund', description: 'Refund a payment', parameters: { payment_id: 'string' } },
     ],
   },
   {
@@ -51,10 +52,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Read and interact with Figma design files',
     category: 'Design',
     tools: [
-      { name: 'get_file', description: 'Get file data', params: { file_key: 'string' } },
-      { name: 'get_components', description: 'List components', params: { file_key: 'string' } },
-      { name: 'get_styles', description: 'List styles', params: { file_key: 'string' } },
-      { name: 'export_images', description: 'Export node as image', params: { node_id: 'string', format: 'string' } },
+      { name: 'get_file', description: 'Get file data', parameters: { file_key: 'string' } },
+      { name: 'get_components', description: 'List components', parameters: { file_key: 'string' } },
+      { name: 'get_styles', description: 'List styles', parameters: { file_key: 'string' } },
+      { name: 'export_images', description: 'Export node as image', parameters: { node_id: 'string', format: 'string' } },
     ],
   },
   {
@@ -62,10 +63,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Send messages and manage Slack channels',
     category: 'Communication',
     tools: [
-      { name: 'send_message', description: 'Send a message', params: { channel: 'string', text: 'string' } },
-      { name: 'list_channels', description: 'List channels', params: {} },
-      { name: 'upload_file', description: 'Upload a file', params: { channel: 'string', file: 'string' } },
-      { name: 'react', description: 'Add reaction', params: { channel: 'string', timestamp: 'string', emoji: 'string' } },
+      { name: 'send_message', description: 'Send a message', parameters: { channel: 'string', text: 'string' } },
+      { name: 'list_channels', description: 'List channels', parameters: {} },
+      { name: 'upload_file', description: 'Upload a file', parameters: { channel: 'string', file: 'string' } },
+      { name: 'react', description: 'Add reaction', parameters: { channel: 'string', timestamp: 'string', emoji: 'string' } },
     ],
   },
   {
@@ -73,10 +74,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Issue tracking and project management',
     category: 'Project Management',
     tools: [
-      { name: 'create_issue', description: 'Create an issue', params: { title: 'string', team: 'string' } },
-      { name: 'update_issue', description: 'Update an issue', params: { id: 'string', data: 'object' } },
-      { name: 'list_issues', description: 'List issues', params: { team: 'string' } },
-      { name: 'add_comment', description: 'Add comment to issue', params: { id: 'string', body: 'string' } },
+      { name: 'create_issue', description: 'Create an issue', parameters: { title: 'string', team: 'string' } },
+      { name: 'update_issue', description: 'Update an issue', parameters: { id: 'string', data: 'object' } },
+      { name: 'list_issues', description: 'List issues', parameters: { team: 'string' } },
+      { name: 'add_comment', description: 'Add comment to issue', parameters: { id: 'string', body: 'string' } },
     ],
   },
   {
@@ -84,10 +85,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Deploy and manage Vercel projects',
     category: 'Deployment',
     tools: [
-      { name: 'deploy', description: 'Trigger deployment', params: { project: 'string' } },
-      { name: 'list_deployments', description: 'List deployments', params: { project: 'string' } },
-      { name: 'get_logs', description: 'Get deployment logs', params: { deployment_id: 'string' } },
-      { name: 'set_env', description: 'Set environment variable', params: { project: 'string', key: 'string', value: 'string' } },
+      { name: 'deploy', description: 'Trigger deployment', parameters: { project: 'string' } },
+      { name: 'list_deployments', description: 'List deployments', parameters: { project: 'string' } },
+      { name: 'get_logs', description: 'Get deployment logs', parameters: { deployment_id: 'string' } },
+      { name: 'set_env', description: 'Set environment variable', parameters: { project: 'string', key: 'string', value: 'string' } },
     ],
   },
   {
@@ -95,10 +96,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Manage containers, images, and compose stacks',
     category: 'DevOps',
     tools: [
-      { name: 'list_containers', description: 'List containers', params: {} },
-      { name: 'run_container', description: 'Run a container', params: { image: 'string', name: 'string' } },
-      { name: 'logs', description: 'Get container logs', params: { container: 'string' } },
-      { name: 'exec', description: 'Exec command in container', params: { container: 'string', command: 'string' } },
+      { name: 'list_containers', description: 'List containers', parameters: {} },
+      { name: 'run_container', description: 'Run a container', parameters: { image: 'string', name: 'string' } },
+      { name: 'logs', description: 'Get container logs', parameters: { container: 'string' } },
+      { name: 'exec', description: 'Exec command in container', parameters: { container: 'string', command: 'string' } },
     ],
   },
   {
@@ -106,10 +107,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Object storage and file management on S3',
     category: 'Cloud',
     tools: [
-      { name: 'list_buckets', description: 'List S3 buckets', params: {} },
-      { name: 'upload', description: 'Upload object', params: { bucket: 'string', key: 'string', body: 'binary' } },
-      { name: 'download', description: 'Download object', params: { bucket: 'string', key: 'string' } },
-      { name: 'delete', description: 'Delete object', params: { bucket: 'string', key: 'string' } },
+      { name: 'list_buckets', description: 'List S3 buckets', parameters: {} },
+      { name: 'upload', description: 'Upload object', parameters: { bucket: 'string', key: 'string', body: 'binary' } },
+      { name: 'download', description: 'Download object', parameters: { bucket: 'string', key: 'string' } },
+      { name: 'delete', description: 'Delete object', parameters: { bucket: 'string', key: 'string' } },
     ],
   },
   {
@@ -117,10 +118,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'AI completions, embeddings, and image generation',
     category: 'AI',
     tools: [
-      { name: 'chat', description: 'Chat completion', params: { model: 'string', messages: 'array' } },
-      { name: 'embed', description: 'Create embeddings', params: { model: 'string', input: 'string' } },
-      { name: 'generate_image', description: 'Generate image', params: { prompt: 'string', size: 'string' } },
-      { name: 'transcribe', description: 'Transcribe audio', params: { file: 'string', model: 'string' } },
+      { name: 'chat', description: 'Chat completion', parameters: { model: 'string', messages: 'array' } },
+      { name: 'embed', description: 'Create embeddings', parameters: { model: 'string', input: 'string' } },
+      { name: 'generate_image', description: 'Generate image', parameters: { prompt: 'string', size: 'string' } },
+      { name: 'transcribe', description: 'Transcribe audio', parameters: { file: 'string', model: 'string' } },
     ],
   },
   {
@@ -128,10 +129,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Direct PostgreSQL database access',
     category: 'Database',
     tools: [
-      { name: 'query', description: 'Execute query', params: { sql: 'string' } },
-      { name: 'schema', description: 'Get schema info', params: { table: 'string' } },
-      { name: 'explain', description: 'Explain query plan', params: { sql: 'string' } },
-      { name: 'backup', description: 'Create backup', params: { database: 'string' } },
+      { name: 'query', description: 'Execute query', parameters: { sql: 'string' } },
+      { name: 'schema', description: 'Get schema info', parameters: { table: 'string' } },
+      { name: 'explain', description: 'Explain query plan', parameters: { sql: 'string' } },
+      { name: 'backup', description: 'Create backup', parameters: { database: 'string' } },
     ],
   },
   {
@@ -139,10 +140,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Read and write Notion pages and databases',
     category: 'Productivity',
     tools: [
-      { name: 'query_database', description: 'Query a database', params: { database_id: 'string', filter: 'object' } },
-      { name: 'create_page', description: 'Create a page', params: { parent: 'object', properties: 'object' } },
-      { name: 'update_page', description: 'Update a page', params: { page_id: 'string', properties: 'object' } },
-      { name: 'get_blocks', description: 'Get page blocks', params: { page_id: 'string' } },
+      { name: 'query_database', description: 'Query a database', parameters: { database_id: 'string', filter: 'object' } },
+      { name: 'create_page', description: 'Create a page', parameters: { parent: 'object', properties: 'object' } },
+      { name: 'update_page', description: 'Update a page', parameters: { page_id: 'string', properties: 'object' } },
+      { name: 'get_blocks', description: 'Get page blocks', parameters: { page_id: 'string' } },
     ],
   },
   {
@@ -150,10 +151,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'In-memory data store and cache management',
     category: 'Database',
     tools: [
-      { name: 'get', description: 'Get value by key', params: { key: 'string' } },
-      { name: 'set', description: 'Set key-value pair', params: { key: 'string', value: 'string', ttl: 'number' } },
-      { name: 'publish', description: 'Publish message', params: { channel: 'string', message: 'string' } },
-      { name: 'flush', description: 'Flush keys', params: { pattern: 'string' } },
+      { name: 'get', description: 'Get value by key', parameters: { key: 'string' } },
+      { name: 'set', description: 'Set key-value pair', parameters: { key: 'string', value: 'string', ttl: 'number' } },
+      { name: 'publish', description: 'Publish message', parameters: { channel: 'string', message: 'string' } },
+      { name: 'flush', description: 'Flush keys', parameters: { pattern: 'string' } },
     ],
   },
   {
@@ -161,10 +162,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Error tracking and performance monitoring',
     category: 'Monitoring',
     tools: [
-      { name: 'list_issues', description: 'List recent issues', params: { project: 'string' } },
-      { name: 'get_issue', description: 'Get issue details', params: { issue_id: 'string' } },
-      { name: 'resolve', description: 'Resolve an issue', params: { issue_id: 'string' } },
-      { name: 'metrics', description: 'Get performance metrics', params: { project: 'string', period: 'string' } },
+      { name: 'list_issues', description: 'List recent issues', parameters: { project: 'string' } },
+      { name: 'get_issue', description: 'Get issue details', parameters: { issue_id: 'string' } },
+      { name: 'resolve', description: 'Resolve an issue', parameters: { issue_id: 'string' } },
+      { name: 'metrics', description: 'Get performance metrics', parameters: { project: 'string', period: 'string' } },
     ],
   },
   {
@@ -172,10 +173,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'CDN, DNS, and edge compute management',
     category: 'Cloud',
     tools: [
-      { name: 'purge_cache', description: 'Purge cache', params: { zone: 'string', urls: 'array' } },
-      { name: 'dns_record', description: 'Manage DNS records', params: { zone: 'string', record: 'object' } },
-      { name: 'analytics', description: 'Get analytics data', params: { zone: 'string', range: 'string' } },
-      { name: 'workers', description: 'Manage workers', params: { account: 'string' } },
+      { name: 'purge_cache', description: 'Purge cache', parameters: { zone: 'string', urls: 'array' } },
+      { name: 'dns_record', description: 'Manage DNS records', parameters: { zone: 'string', record: 'object' } },
+      { name: 'analytics', description: 'Get analytics data', parameters: { zone: 'string', range: 'string' } },
+      { name: 'workers', description: 'Manage workers', parameters: { account: 'string' } },
     ],
   },
   {
@@ -183,10 +184,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Serverless Postgres with branching',
     category: 'Database',
     tools: [
-      { name: 'create_branch', description: 'Create database branch', params: { project: 'string', name: 'string' } },
-      { name: 'query', description: 'Run query on branch', params: { branch: 'string', sql: 'string' } },
-      { name: 'list_branches', description: 'List branches', params: { project: 'string' } },
-      { name: 'reset', description: 'Reset branch', params: { branch: 'string' } },
+      { name: 'create_branch', description: 'Create database branch', parameters: { project: 'string', name: 'string' } },
+      { name: 'query', description: 'Run query on branch', parameters: { branch: 'string', sql: 'string' } },
+      { name: 'list_branches', description: 'List branches', parameters: { project: 'string' } },
+      { name: 'reset', description: 'Reset branch', parameters: { branch: 'string' } },
     ],
   },
   {
@@ -194,10 +195,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Authentication and authorization management',
     category: 'Security',
     tools: [
-      { name: 'list_users', description: 'List users', params: {} },
-      { name: 'create_user', description: 'Create user', params: { email: 'string', password: 'string' } },
-      { name: 'assign_role', description: 'Assign role', params: { user_id: 'string', role: 'string' } },
-      { name: 'revoke_token', description: 'Revoke token', params: { token: 'string' } },
+      { name: 'list_users', description: 'List users', parameters: {} },
+      { name: 'create_user', description: 'Create user', parameters: { email: 'string', password: 'string' } },
+      { name: 'assign_role', description: 'Assign role', parameters: { user_id: 'string', role: 'string' } },
+      { name: 'revoke_token', description: 'Revoke token', parameters: { token: 'string' } },
     ],
   },
   {
@@ -205,10 +206,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Transactional email sending and templates',
     category: 'Communication',
     tools: [
-      { name: 'send_email', description: 'Send email', params: { from: 'string', to: 'string', subject: 'string', html: 'string' } },
-      { name: 'list_domains', description: 'List domains', params: {} },
-      { name: 'create_domain', description: 'Create domain', params: { name: 'string' } },
-      { name: 'batch', description: 'Batch send emails', params: { emails: 'array' } },
+      { name: 'send_email', description: 'Send email', parameters: { from: 'string', to: 'string', subject: 'string', html: 'string' } },
+      { name: 'list_domains', description: 'List domains', parameters: {} },
+      { name: 'create_domain', description: 'Create domain', parameters: { name: 'string' } },
+      { name: 'batch', description: 'Batch send emails', parameters: { emails: 'array' } },
     ],
   },
   {
@@ -216,10 +217,10 @@ const PRELOADED_SERVERS: MCPServer[] = [
     description: 'Serverless Redis and Kafka',
     category: 'Database',
     tools: [
-      { name: 'get', description: 'Get value', params: { key: 'string' } },
-      { name: 'set', description: 'Set value', params: { key: 'string', value: 'string', ex: 'number' } },
-      { name: 'incr', description: 'Increment counter', params: { key: 'string' } },
-      { name: 'topic_publish', description: 'Publish to Kafka topic', params: { topic: 'string', message: 'string' } },
+      { name: 'get', description: 'Get value', parameters: { key: 'string' } },
+      { name: 'set', description: 'Set value', parameters: { key: 'string', value: 'string', ex: 'number' } },
+      { name: 'incr', description: 'Increment counter', parameters: { key: 'string' } },
+      { name: 'topic_publish', description: 'Publish to Kafka topic', parameters: { topic: 'string', message: 'string' } },
     ],
   },
 ];
@@ -233,7 +234,9 @@ interface MCPRegistryState {
   executeTool: (serverName: string, toolName: string, input: Record<string, unknown>) => void;
 }
 
-export const useMCPRegistryStore = create<MCPRegistryState>((set, get) => ({
+export const useMCPRegistryStore = create<MCPRegistryState>()(
+  persist(
+    (set, get) => ({
   servers: PRELOADED_SERVERS,
   searchQuery: '',
   filteredServers: PRELOADED_SERVERS,
@@ -283,4 +286,12 @@ export const useMCPRegistryStore = create<MCPRegistryState>((set, get) => ({
       }));
     }, 800 + Math.random() * 2000);
   },
-}));
+}),
+    {
+      name: 'nova-mcp-store',
+      partialize: (state) => ({
+        executions: state.executions,
+      }),
+    },
+  )
+);

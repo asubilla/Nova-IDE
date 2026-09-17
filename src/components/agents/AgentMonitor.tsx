@@ -106,7 +106,7 @@ export default function AgentMonitor() {
               </div>
 
               <span style={{ color: '#333', fontSize: 10, flexShrink: 0 }}>
-                {Math.floor((Date.now() - agent.startTime) / 1000)}s
+                {Math.floor((Date.now() - new Date(agent.createdAt).getTime()) / 1000)}s
               </span>
             </div>
           );

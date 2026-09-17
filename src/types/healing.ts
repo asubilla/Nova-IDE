@@ -1,9 +1,11 @@
 export interface HealingEvent {
   id: string;
-  timestamp: number;
-  type: 'error' | 'retry' | 'fix' | 'success';
+  timestamp: string;
+  eventType: string;
   message: string;
   agentId: string;
+  createdAt: string;
+  logs: string[];
 }
 
 export interface CrashLog {

@@ -2,10 +2,14 @@ use keyring::Entry;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::HashMap;
+use tauri::Emitter;
+
+use super::error::CommandError;
 
 const SERVICE_NAME: &str = "nova-ide";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AIProvider {
     pub id: String,
     pub name: String,
@@ -15,6 +19,7 @@ pub struct AIProvider {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AIMessage {
     pub role: String,
     pub content: String,
@@ -22,6 +27,7 @@ pub struct AIMessage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolCall {
     pub id: String,
     pub name: String,
@@ -87,22 +93,22 @@ fn default_providers() -> Vec<AIProvider> {
     ]
 }
 
-async fn get_api_key(provider_id: &str) -> Result<Option<String>, String> {
+async fn get_api_key(provider_id: &str) -> Result<Option<String>, CommandError> {
     let entry =
-        Entry::new(SERVICE_NAME, &format!("api_key_{}", provider_id)).map_err(|e| e.to_string())?;
+        Entry::new(SERVICE_NAME, &format!("api_key_{}", provider_id)).map_err(|e| CommandError { code: "KEYRING_ERROR".into(), message: e.to_string() })?;
     match entry.get_password() {
         Ok(key) => Ok(Some(key)),
         Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(CommandError { code: "KEYRING_ERROR".into(), message: e.to_string() }),
     }
 }
 
-async fn store_api_key(provider_id: &str, api_key: &str) -> Result<(), String> {
+async fn store_api_key(provider_id: &str, api_key: &str) -> Result<(), CommandError> {
     let entry =
-        Entry::new(SERVICE_NAME, &format!("api_key_{}", provider_id)).map_err(|e| e.to_string())?;
+        Entry::new(SERVICE_NAME, &format!("api_key_{}", provider_id)).map_err(|e| CommandError { code: "KEYRING_ERROR".into(), message: e.to_string() })?;
     entry
         .set_password(api_key)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| CommandError { code: "KEYRING_ERROR".into(), message: e.to_string() })?;
     Ok(())
 }
 
@@ -111,7 +117,7 @@ async fn send_openai_request(
     api_key: &str,
     model: &str,
     messages: Vec<AIMessage>,
-) -> Result<String, String> {
+) -> Result<String, CommandError> {
     let client = reqwest::Client::new();
     let messages_json: Vec<serde_json::Value> = messages
         .iter()
@@ -137,32 +143,32 @@ async fn send_openai_request(
         }))
         .send()
         .await
-        .map_err(|e| format!("Request failed: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Request failed: {}", e) })?;
 
     let status = response.status();
     let body = response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Failed to read response: {}", e) })?;
 
     if !status.is_success() {
-        return Err(format!("API error ({}): {}", status, body));
+        return Err(CommandError { code: "API_ERROR".into(), message: format!("API error ({}): {}", status, body) });
     }
 
     let parsed: serde_json::Value =
-        serde_json::from_str(&body).map_err(|e| format!("Failed to parse response: {}", e))?;
+        serde_json::from_str(&body).map_err(|e| CommandError { code: "PARSE_ERROR".into(), message: format!("Failed to parse response: {}", e) })?;
 
     parsed["choices"][0]["message"]["content"]
         .as_str()
         .map(|s| s.to_string())
-        .ok_or_else(|| format!("Unexpected response structure: {}", body))
+        .ok_or_else(|| CommandError { code: "UNEXPECTED_RESPONSE".into(), message: format!("Unexpected response structure: {}", body) })
 }
 
 async fn send_anthropic_request(
     api_key: &str,
     model: &str,
     messages: Vec<AIMessage>,
-) -> Result<String, String> {
+) -> Result<String, CommandError> {
     let client = reqwest::Client::new();
     let api_messages: Vec<serde_json::Value> = messages
         .iter()
@@ -198,32 +204,32 @@ async fn send_anthropic_request(
         .json(&body)
         .send()
         .await
-        .map_err(|e| format!("Request failed: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Request failed: {}", e) })?;
 
     let status = response.status();
     let resp_body = response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Failed to read response: {}", e) })?;
 
     if !status.is_success() {
-        return Err(format!("API error ({}): {}", status, resp_body));
+        return Err(CommandError { code: "API_ERROR".into(), message: format!("API error ({}): {}", status, resp_body) });
     }
 
     let parsed: serde_json::Value =
-        serde_json::from_str(&resp_body).map_err(|e| format!("Failed to parse response: {}", e))?;
+        serde_json::from_str(&resp_body).map_err(|e| CommandError { code: "PARSE_ERROR".into(), message: format!("Failed to parse response: {}", e) })?;
 
     parsed["content"][0]["text"]
         .as_str()
         .map(|s| s.to_string())
-        .ok_or_else(|| format!("Unexpected response structure: {}", resp_body))
+        .ok_or_else(|| CommandError { code: "UNEXPECTED_RESPONSE".into(), message: format!("Unexpected response structure: {}", resp_body) })
 }
 
 async fn send_gemini_request(
     api_key: &str,
     model: &str,
     messages: Vec<AIMessage>,
-) -> Result<String, String> {
+) -> Result<String, CommandError> {
     let client = reqwest::Client::new();
     let contents: Vec<serde_json::Value> = messages
         .iter()
@@ -247,25 +253,25 @@ async fn send_gemini_request(
         }))
         .send()
         .await
-        .map_err(|e| format!("Request failed: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Request failed: {}", e) })?;
 
     let status = response.status();
     let body = response
         .text()
         .await
-        .map_err(|e| format!("Failed to read response: {}", e))?;
+        .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Failed to read response: {}", e) })?;
 
     if !status.is_success() {
-        return Err(format!("API error ({}): {}", status, body));
+        return Err(CommandError { code: "API_ERROR".into(), message: format!("API error ({}): {}", status, body) });
     }
 
     let parsed: serde_json::Value =
-        serde_json::from_str(&body).map_err(|e| format!("Failed to parse response: {}", e))?;
+        serde_json::from_str(&body).map_err(|e| CommandError { code: "PARSE_ERROR".into(), message: format!("Failed to parse response: {}", e) })?;
 
     parsed["candidates"][0]["content"]["parts"][0]["text"]
         .as_str()
         .map(|s| s.to_string())
-        .ok_or_else(|| format!("Unexpected response structure: {}", body))
+        .ok_or_else(|| CommandError { code: "UNEXPECTED_RESPONSE".into(), message: format!("Unexpected response structure: {}", body) })
 }
 
 #[tauri::command]
@@ -273,16 +279,16 @@ pub async fn send_ai_message(
     provider_id: String,
     model: String,
     messages: Vec<AIMessage>,
-) -> Result<String, String> {
+) -> Result<String, CommandError> {
     let providers = default_providers();
     let provider = providers
         .iter()
         .find(|p| p.id == provider_id)
-        .ok_or_else(|| format!("Unknown provider: {}", provider_id))?;
+        .ok_or_else(|| CommandError { code: "INVALID_PROVIDER".into(), message: format!("Unknown provider: {}", provider_id) })?;
 
     let api_key = get_api_key(&provider_id)
         .await?
-        .ok_or_else(|| format!("No API key configured for {}", provider.name))?;
+        .ok_or_else(|| CommandError { code: "NO_API_KEY".into(), message: format!("No API key configured for {}", provider.name) })?;
 
     match provider_id.as_str() {
         "openai" | "groq" | "deepseek" => {
@@ -290,12 +296,40 @@ pub async fn send_ai_message(
         }
         "anthropic" => send_anthropic_request(&api_key, &model, messages).await,
         "google" => send_gemini_request(&api_key, &model, messages).await,
-        _ => Err(format!("Unsupported provider: {}", provider_id)),
+        _ => Err(CommandError { code: "UNSUPPORTED_PROVIDER".into(), message: format!("Unsupported provider: {}", provider_id) }),
     }
 }
 
 #[tauri::command]
-pub async fn list_providers() -> Result<Vec<AIProvider>, String> {
+pub async fn stream_ai_message(
+    app: tauri::AppHandle,
+    provider_id: String,
+    model: String,
+    messages: Vec<AIMessage>,
+) -> Result<(), CommandError> {
+    let full_response = send_ai_message(provider_id.clone(), model, messages).await?;
+
+    let chars: Vec<char> = full_response.chars().collect();
+    let total = chars.len();
+    let chunk_size = (total / 4).max(1);
+
+    let mut start = 0;
+    while start < total {
+        let end = (start + chunk_size).min(total);
+        let chunk: String = chars[start..end].iter().collect();
+        let _ = app.emit("ai-token", &chunk);
+        start = end;
+        if start < total {
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+    }
+
+    let _ = app.emit("ai-stream-complete", ());
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_providers() -> Result<Vec<AIProvider>, CommandError> {
     let providers = default_providers();
     let mut result = Vec::new();
 
@@ -311,25 +345,25 @@ pub async fn list_providers() -> Result<Vec<AIProvider>, String> {
 }
 
 #[tauri::command]
-pub async fn save_api_key(provider_id: String, api_key: String) -> Result<(), String> {
+pub async fn save_api_key(provider_id: String, api_key: String) -> Result<(), CommandError> {
     let providers = default_providers();
     if !providers.iter().any(|p| p.id == provider_id) {
-        return Err(format!("Unknown provider: {}", provider_id));
+        return Err(CommandError { code: "INVALID_PROVIDER".into(), message: format!("Unknown provider: {}", provider_id) });
     }
     store_api_key(&provider_id, &api_key).await
 }
 
 #[tauri::command]
-pub async fn test_connection(provider_id: String) -> Result<bool, String> {
+pub async fn test_connection(provider_id: String) -> Result<bool, CommandError> {
     let providers = default_providers();
     let provider = providers
         .iter()
         .find(|p| p.id == provider_id)
-        .ok_or_else(|| format!("Unknown provider: {}", provider_id))?;
+        .ok_or_else(|| CommandError { code: "INVALID_PROVIDER".into(), message: format!("Unknown provider: {}", provider_id) })?;
 
     let api_key = get_api_key(&provider_id)
         .await?
-        .ok_or_else(|| format!("No API key configured for {}", provider.name))?;
+        .ok_or_else(|| CommandError { code: "NO_API_KEY".into(), message: format!("No API key configured for {}", provider.name) })?;
 
     let client = reqwest::Client::new();
     let test_messages = vec![AIMessage {
@@ -351,7 +385,7 @@ pub async fn test_connection(provider_id: String) -> Result<bool, String> {
                 }))
                 .send()
                 .await
-                .map_err(|e| format!("Connection test failed: {}", e))?;
+                .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Connection test failed: {}", e) })?;
             Ok(response.status().is_success())
         }
         "anthropic" => {
@@ -367,7 +401,7 @@ pub async fn test_connection(provider_id: String) -> Result<bool, String> {
                 }))
                 .send()
                 .await
-                .map_err(|e| format!("Connection test failed: {}", e))?;
+                .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Connection test failed: {}", e) })?;
             Ok(response.status().is_success())
         }
         "google" => {
@@ -383,9 +417,9 @@ pub async fn test_connection(provider_id: String) -> Result<bool, String> {
                 }))
                 .send()
                 .await
-                .map_err(|e| format!("Connection test failed: {}", e))?;
+                .map_err(|e| CommandError { code: "NETWORK_ERROR".into(), message: format!("Connection test failed: {}", e) })?;
             Ok(response.status().is_success())
         }
-        _ => Err(format!("Unsupported provider: {}", provider_id)),
+        _ => Err(CommandError { code: "UNSUPPORTED_PROVIDER".into(), message: format!("Unsupported provider: {}", provider_id) }),
     }
 }

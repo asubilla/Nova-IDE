@@ -1,30 +1,36 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { HealingEvent, CrashLog } from '../types/healing';
 
 interface HealingState {
   events: HealingEvent[];
   crashLogs: CrashLog[];
-  addEvent: (type: HealingEvent['type'], message: string, agentId: string) => void;
+  addEvent: (eventType: HealingEvent['eventType'], message: string, agentId: string) => void;
   recoverAgent: (crashLogId: string) => void;
 }
 
 const generateId = () => crypto.randomUUID();
 
-export const useHealingStore = create<HealingState>((set) => ({
-  events: [],
-  crashLogs: [],
+export const useHealingStore = create<HealingState>()(
+  persist(
+    (set) => ({
+      events: [],
+      crashLogs: [],
 
-  addEvent: (type, message, agentId) => {
+  addEvent: (eventType, message, agentId) => {
+    const now = new Date().toISOString();
     const event: HealingEvent = {
       id: generateId(),
-      timestamp: Date.now(),
-      type,
+      timestamp: now,
+      eventType,
       message,
       agentId,
+      createdAt: now,
+      logs: [],
     };
     set((s) => ({ events: [event, ...s.events] }));
 
-    if (type === 'error') {
+    if (eventType === 'error') {
       const crashLog: CrashLog = {
         id: generateId(),
         agentId,
@@ -35,18 +41,20 @@ export const useHealingStore = create<HealingState>((set) => ({
       set((s) => ({ crashLogs: [crashLog, ...s.crashLogs] }));
 
       setTimeout(() => {
+        const ts = new Date().toISOString();
         set((s) => ({
           events: [
-            { id: generateId(), timestamp: Date.now(), type: 'retry', message: `Retrying agent ${agentId}...`, agentId },
+            { id: generateId(), timestamp: ts, eventType: 'retry', message: `Retrying agent ${agentId}...`, agentId, createdAt: ts, logs: [] },
             ...s.events,
           ],
         }));
       }, 500);
 
       setTimeout(() => {
+        const ts = new Date().toISOString();
         set((s) => ({
           events: [
-            { id: generateId(), timestamp: Date.now(), type: 'fix', message: `Applied fix for ${message}`, agentId },
+            { id: generateId(), timestamp: ts, eventType: 'fix', message: `Applied fix for ${message}`, agentId, createdAt: ts, logs: [] },
             ...s.events,
           ],
           crashLogs: s.crashLogs.map((cl) =>
@@ -56,9 +64,10 @@ export const useHealingStore = create<HealingState>((set) => ({
       }, 1200);
 
       setTimeout(() => {
+        const ts = new Date().toISOString();
         set((s) => ({
           events: [
-            { id: generateId(), timestamp: Date.now(), type: 'success', message: `Agent ${agentId} recovered successfully`, agentId },
+            { id: generateId(), timestamp: ts, eventType: 'success', message: `Agent ${agentId} recovered successfully`, agentId, createdAt: ts, logs: [] },
             ...s.events,
           ],
         }));
@@ -73,4 +82,13 @@ export const useHealingStore = create<HealingState>((set) => ({
       ),
     }));
   },
-}));
+}),
+    {
+      name: 'nova-healing-store',
+      partialize: (state) => ({
+        events: state.events,
+        crashLogs: state.crashLogs,
+      }),
+    },
+  )
+);

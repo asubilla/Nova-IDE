@@ -6,7 +6,8 @@ export interface Agent {
   status: AgentStatus;
   task: string;
   progress: number;
-  startTime: number;
+  createdAt: string;
+  logs: string[];
 }
 
 export type TaskStatus = 'backlog' | 'todo' | 'in-progress' | 'done';

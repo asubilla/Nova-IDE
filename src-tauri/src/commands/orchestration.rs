@@ -2,8 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::{AppHandle, Emitter};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct OrchestrationPattern {
     pub id: String,
     pub name: String,
@@ -12,6 +14,7 @@ pub struct OrchestrationPattern {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct PatternExecution {
     execution_id: String,
     pattern_id: String,
@@ -24,6 +27,7 @@ struct PatternExecution {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ExecutionStep {
     name: String,
     status: String,
@@ -113,13 +117,199 @@ fn builtin_patterns() -> Vec<OrchestrationPattern> {
     ]
 }
 
+fn get_steps_for_pattern(pattern_type: &str) -> Vec<ExecutionStep> {
+    match pattern_type {
+        "sequential" => vec![
+            ExecutionStep {
+                name: "Parse task requirements".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Execute step 1".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Execute step 2".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Combine results".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "parallel" => vec![
+            ExecutionStep {
+                name: "Split task into subtasks".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Execute subtask A (parallel)".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Execute subtask B (parallel)".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Execute subtask C (parallel)".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Merge parallel results".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "supervisor" => vec![
+            ExecutionStep {
+                name: "Analyze task complexity".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Delegate to specialist A".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Delegate to specialist B".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Supervisor reviews and integrates".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "chain_of_thought" => vec![
+            ExecutionStep {
+                name: "Initial analysis".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Step 1: Identify approach".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Step 2: Execute approach".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Step 3: Verify result".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "map_reduce" => vec![
+            ExecutionStep {
+                name: "Map: Split input".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Reduce: Process chunks".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Reduce: Merge output".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "react" => vec![
+            ExecutionStep {
+                name: "Thought 1: Analyze task".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Action 1: Execute first step".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Observation 1: Check result".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Thought 2: Determine next action".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "reflection" => vec![
+            ExecutionStep {
+                name: "Generate initial output".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Self-critique".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Refine based on critique".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Final quality check".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        "consensus" => vec![
+            ExecutionStep {
+                name: "Agent A: Independent analysis".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Agent B: Independent analysis".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Agent C: Independent analysis".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+            ExecutionStep {
+                name: "Vote and aggregate".to_string(),
+                status: "pending".to_string(),
+                output: None,
+            },
+        ],
+        _ => vec![],
+    }
+}
+
 #[tauri::command]
 pub async fn list_patterns() -> Result<Vec<OrchestrationPattern>, String> {
     Ok(builtin_patterns())
 }
 
 #[tauri::command]
-pub async fn execute_pattern(pattern_id: String, task: String) -> Result<String, String> {
+pub async fn execute_pattern(
+    app: AppHandle,
+    pattern_id: String,
+    task: String,
+) -> Result<String, String> {
     let patterns = builtin_patterns();
     let pattern = patterns
         .iter()
@@ -129,226 +319,160 @@ pub async fn execute_pattern(pattern_id: String, task: String) -> Result<String,
     let execution_id = generate_id();
     let now = current_timestamp();
 
-    let steps = match pattern.pattern_type.as_str() {
-        "sequential" => vec![
-            ExecutionStep {
-                name: "Parse task requirements".to_string(),
-                status: "completed".to_string(),
-                output: Some("Requirements extracted".to_string()),
-            },
-            ExecutionStep {
-                name: "Execute step 1".to_string(),
-                status: "completed".to_string(),
-                output: Some("Step 1 complete".to_string()),
-            },
-            ExecutionStep {
-                name: "Execute step 2".to_string(),
-                status: "completed".to_string(),
-                output: Some("Step 2 complete".to_string()),
-            },
-            ExecutionStep {
-                name: "Combine results".to_string(),
-                status: "completed".to_string(),
-                output: Some("Results combined".to_string()),
-            },
-        ],
-        "parallel" => vec![
-            ExecutionStep {
-                name: "Split task into subtasks".to_string(),
-                status: "completed".to_string(),
-                output: Some("3 subtasks created".to_string()),
-            },
-            ExecutionStep {
-                name: "Execute subtask A (parallel)".to_string(),
-                status: "completed".to_string(),
-                output: Some("Subtask A done".to_string()),
-            },
-            ExecutionStep {
-                name: "Execute subtask B (parallel)".to_string(),
-                status: "completed".to_string(),
-                output: Some("Subtask B done".to_string()),
-            },
-            ExecutionStep {
-                name: "Execute subtask C (parallel)".to_string(),
-                status: "completed".to_string(),
-                output: Some("Subtask C done".to_string()),
-            },
-            ExecutionStep {
-                name: "Merge parallel results".to_string(),
-                status: "completed".to_string(),
-                output: Some("All results merged".to_string()),
-            },
-        ],
-        "supervisor" => vec![
-            ExecutionStep {
-                name: "Analyze task complexity".to_string(),
-                status: "completed".to_string(),
-                output: Some("Task requires 2 specialist agents".to_string()),
-            },
-            ExecutionStep {
-                name: "Delegate to specialist A".to_string(),
-                status: "completed".to_string(),
-                output: Some("Specialist A completed subtask".to_string()),
-            },
-            ExecutionStep {
-                name: "Delegate to specialist B".to_string(),
-                status: "completed".to_string(),
-                output: Some("Specialist B completed subtask".to_string()),
-            },
-            ExecutionStep {
-                name: "Supervisor reviews and integrates".to_string(),
-                status: "completed".to_string(),
-                output: Some("Final output assembled".to_string()),
-            },
-        ],
-        "chain_of_thought" => vec![
-            ExecutionStep {
-                name: "Initial analysis".to_string(),
-                status: "completed".to_string(),
-                output: Some("Task context understood".to_string()),
-            },
-            ExecutionStep {
-                name: "Step 1: Identify approach".to_string(),
-                status: "completed".to_string(),
-                output: Some("Approach selected".to_string()),
-            },
-            ExecutionStep {
-                name: "Step 2: Execute approach".to_string(),
-                status: "completed".to_string(),
-                output: Some("Approach executed".to_string()),
-            },
-            ExecutionStep {
-                name: "Step 3: Verify result".to_string(),
-                status: "completed".to_string(),
-                output: Some("Result verified".to_string()),
-            },
-        ],
-        "map_reduce" => vec![
-            ExecutionStep {
-                name: "Map: Split input".to_string(),
-                status: "completed".to_string(),
-                output: Some("Input split into chunks".to_string()),
-            },
-            ExecutionStep {
-                name: "Reduce: Process chunks".to_string(),
-                status: "completed".to_string(),
-                output: Some("Chunks processed".to_string()),
-            },
-            ExecutionStep {
-                name: "Reduce: Merge output".to_string(),
-                status: "completed".to_string(),
-                output: Some("Output merged".to_string()),
-            },
-        ],
-        "react" => vec![
-            ExecutionStep {
-                name: "Thought 1: Analyze task".to_string(),
-                status: "completed".to_string(),
-                output: Some("Understood the task requirements".to_string()),
-            },
-            ExecutionStep {
-                name: "Action 1: Execute first step".to_string(),
-                status: "completed".to_string(),
-                output: Some("First step completed".to_string()),
-            },
-            ExecutionStep {
-                name: "Observation 1: Check result".to_string(),
-                status: "completed".to_string(),
-                output: Some("Result is satisfactory".to_string()),
-            },
-            ExecutionStep {
-                name: "Thought 2: Determine next action".to_string(),
-                status: "completed".to_string(),
-                output: Some("Task complete, no more actions needed".to_string()),
-            },
-        ],
-        "reflection" => vec![
-            ExecutionStep {
-                name: "Generate initial output".to_string(),
-                status: "completed".to_string(),
-                output: Some("Draft generated".to_string()),
-            },
-            ExecutionStep {
-                name: "Self-critique".to_string(),
-                status: "completed".to_string(),
-                output: Some("Areas for improvement identified".to_string()),
-            },
-            ExecutionStep {
-                name: "Refine based on critique".to_string(),
-                status: "completed".to_string(),
-                output: Some("Output refined".to_string()),
-            },
-            ExecutionStep {
-                name: "Final quality check".to_string(),
-                status: "completed".to_string(),
-                output: Some("Quality threshold met".to_string()),
-            },
-        ],
-        "consensus" => vec![
-            ExecutionStep {
-                name: "Agent A: Independent analysis".to_string(),
-                status: "completed".to_string(),
-                output: Some("Agent A recommendation ready".to_string()),
-            },
-            ExecutionStep {
-                name: "Agent B: Independent analysis".to_string(),
-                status: "completed".to_string(),
-                output: Some("Agent B recommendation ready".to_string()),
-            },
-            ExecutionStep {
-                name: "Agent C: Independent analysis".to_string(),
-                status: "completed".to_string(),
-                output: Some("Agent C recommendation ready".to_string()),
-            },
-            ExecutionStep {
-                name: "Vote and aggregate".to_string(),
-                status: "completed".to_string(),
-                output: Some("Consensus reached".to_string()),
-            },
-        ],
-        _ => vec![],
-    };
+    let steps = get_steps_for_pattern(&pattern.pattern_type);
 
     let execution = PatternExecution {
         execution_id: execution_id.clone(),
         pattern_id: pattern_id.clone(),
-        status: "completed".to_string(),
+        status: "running".to_string(),
         task: task.clone(),
         started_at: now.clone(),
-        completed_at: Some(current_timestamp()),
-        result: Some(format!(
-            "Pattern '{}' executed successfully for task: {}",
-            pattern.name, task
-        )),
+        completed_at: None,
+        result: None,
         steps,
     };
 
-    let mut executions = get_executions().lock().map_err(|e| e.to_string())?;
-    executions.insert(execution_id.clone(), execution);
+    {
+        let mut executions = get_executions().lock().map_err(|e| e.to_string())?;
+        executions.insert(execution_id.clone(), execution.clone());
+    }
+
+    let exec_id = execution_id.clone();
+    let pat_name = pattern.name.clone();
+    let pat_type = pattern.pattern_type.clone();
+    let task_clone = task.clone();
+
+    tokio::spawn(async move {
+        let total_steps = {
+            let executions = get_executions().lock().unwrap();
+            executions.get(&exec_id).map(|e| e.steps.len()).unwrap_or(0)
+        };
+
+        for step_idx in 0..total_steps {
+            tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+
+            let mut executions = match get_executions().lock() {
+                Ok(e) => e,
+                Err(_) => return,
+            };
+
+            if let Some(execution) = executions.get_mut(&exec_id) {
+                if step_idx < execution.steps.len() {
+                    let step_name = execution.steps[step_idx].name.clone();
+                    execution.steps[step_idx].status = "running".to_string();
+
+                    let snapshot = execution.clone();
+                    drop(executions);
+
+                    let _ = app.emit(
+                        "pattern-step-progress",
+                        serde_json::json!({
+                            "executionId": exec_id,
+                            "stepIndex": step_idx,
+                            "stepName": step_name,
+                            "status": "running",
+                        }),
+                    );
+
+                    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+
+                    let mut executions = match get_executions().lock() {
+                        Ok(e) => e,
+                        Err(_) => return,
+                    };
+
+                    if let Some(execution) = executions.get_mut(&exec_id) {
+                        let output_msg = match pat_type.as_str() {
+                            "sequential" => format!("Step {} completed", step_idx + 1),
+                            "parallel" => format!("Subtask {} finished", (step_idx as u8 + b'A')),
+                            "supervisor" => format!("Subtask delegated and completed"),
+                            "chain_of_thought" => format!("Analysis phase {} done", step_idx + 1),
+                            "map_reduce" => format!("Chunk {} processed", step_idx + 1),
+                            "react" => format!("Reason-action cycle {} done", step_idx + 1),
+                            "reflection" => format!("Reflection iteration {} done", step_idx + 1),
+                            "consensus" => format!("Agent vote {} submitted", step_idx + 1),
+                            _ => "Step completed".to_string(),
+                        };
+
+                        execution.steps[step_idx].status = "completed".to_string();
+                        execution.steps[step_idx].output = Some(output_msg);
+
+                        if step_idx == total_steps - 1 {
+                            execution.status = "completed".to_string();
+                            execution.completed_at = Some(current_timestamp());
+                            execution.result = Some(format!(
+                                "Pattern '{}' executed successfully for task: {}",
+                                pat_name, task_clone
+                            ));
+                        }
+
+                        let snapshot = execution.clone();
+                        drop(executions);
+
+                        let _ = app.emit(
+                            "pattern-step-progress",
+                            serde_json::json!({
+                                "executionId": exec_id,
+                                "stepIndex": step_idx,
+                                "stepName": execution.steps[step_idx].name,
+                                "status": "completed",
+                                "output": execution.steps[step_idx].output,
+                            }),
+                        );
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    });
 
     Ok(format!(
-        "Execution '{}' completed using pattern '{}' for task: {}",
+        "Execution '{}' started using pattern '{}' for task: {}",
         execution_id, pattern.name, task
     ))
 }
 
 #[tauri::command]
-pub async fn get_pattern_status(execution_id: String) -> Result<serde_json::Value, String> {
+pub async fn get_pattern_status(execution_id: String) -> Result<PatternStatusResponse, String> {
     let executions = get_executions().lock().map_err(|e| e.to_string())?;
 
     let execution = executions
         .get(&execution_id)
         .ok_or_else(|| format!("Execution not found: {}", execution_id))?;
 
-    Ok(serde_json::json!({
-        "execution_id": execution.execution_id,
-        "pattern_id": execution.pattern_id,
-        "status": execution.status,
-        "task": execution.task,
-        "started_at": execution.started_at,
-        "completed_at": execution.completed_at,
-        "result": execution.result,
-        "steps": execution.steps,
-        "progress": if execution.status == "completed" { 1.0 } else { 0.5 },
-    }))
+    let progress = if execution.status == "completed" {
+        1.0
+    } else if execution.steps.is_empty() {
+        0.0
+    } else {
+        let completed = execution.steps.iter().filter(|s| s.status == "completed").count();
+        completed as f32 / execution.steps.len() as f32
+    };
+
+    Ok(PatternStatusResponse {
+        execution_id: execution.execution_id.clone(),
+        pattern_id: execution.pattern_id.clone(),
+        status: execution.status.clone(),
+        task: execution.task.clone(),
+        started_at: execution.started_at.clone(),
+        completed_at: execution.completed_at.clone(),
+        result: execution.result.clone(),
+        steps: execution.steps.clone(),
+        progress,
+    })
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PatternStatusResponse {
+    execution_id: String,
+    pattern_id: String,
+    status: String,
+    task: String,
+    started_at: String,
+    completed_at: Option<String>,
+    result: Option<String>,
+    steps: Vec<ExecutionStep>,
+    progress: f32,
 }

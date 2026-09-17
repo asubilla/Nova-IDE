@@ -40,7 +40,7 @@ export default function MCPToolCard({ server }: { server: MCPServer }) {
     const tool = server.tools[0];
     if (!tool) return;
     const input: Record<string, unknown> = {};
-    Object.keys(tool.params).forEach((k) => {
+    Object.keys(tool.parameters).forEach((k) => {
       input[k] = `sample_${k}`;
     });
     executeTool(server.name, tool.name, input);

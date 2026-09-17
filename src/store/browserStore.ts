@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { Page, Screenshot, DOMNode } from '../types/browser';
 
 interface BrowserState {
@@ -11,11 +12,13 @@ interface BrowserState {
   inspectDOM: () => void;
 }
 
-export const useBrowserStore = create<BrowserState>((set, get) => ({
-  pages: [],
-  currentUrl: '',
-  screenshot: null,
-  domTree: null,
+export const useBrowserStore = create<BrowserState>()(
+  persist(
+    (set, get) => ({
+      pages: [],
+      currentUrl: '',
+      screenshot: null,
+      domTree: null,
 
   navigate: (url: string) => {
     const page: Page = { url, title: url, status: 'loading' };
@@ -76,4 +79,13 @@ export const useBrowserStore = create<BrowserState>((set, get) => ({
       },
     });
   },
-}));
+}),
+    {
+      name: 'nova-browser-store',
+      partialize: (state) => ({
+        pages: state.pages,
+        currentUrl: state.currentUrl,
+      }),
+    },
+  )
+);
