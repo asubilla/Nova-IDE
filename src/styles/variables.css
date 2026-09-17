@@ -1,0 +1,80 @@
+:root {
+  /* Backgrounds */
+  --bg-darkest: #0a0a0f;
+  --bg-dark: #0f1019;
+  --bg-panel: #13141f;
+  --bg-sidebar: #0d0e17;
+  --bg-editor: #111220;
+  --bg-terminal: #0c0d14;
+  --bg-hover: #1a1b2e;
+  --bg-active: #1e1f35;
+  --bg-input: #0d0e17;
+
+  /* Borders */
+  --border: #1e2035;
+  --border-active: #6c5ce7;
+  --border-focus: #6c5ce7;
+
+  /* Text */
+  --text-primary: #e4e4f0;
+  --text-secondary: #7a7c94;
+  --text-dim: #4a4c64;
+  --text-inverse: #0a0a0f;
+
+  /* Accent Colors */
+  --accent: #6c5ce7;
+  --accent-hover: #7c6cf7;
+  --accent-active: #5c4cd7;
+  --accent2: #00d2ff;
+  --accent3: #ff6b9d;
+
+  /* Status Colors */
+  --green: #00e676;
+  --green-bg: rgba(0, 230, 118, 0.15);
+  --yellow: #ffd600;
+  --yellow-bg: rgba(255, 214, 0, 0.15);
+  --orange: #ff9100;
+  --orange-bg: rgba(255, 145, 0, 0.15);
+  --red: #ff5252;
+  --red-bg: rgba(255, 82, 82, 0.15);
+  --cyan: #00e5ff;
+  --cyan-bg: rgba(0, 229, 255, 0.15);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-base: 12px;
+  --font-size-md: 13px;
+  --font-size-lg: 14px;
+  --font-size-xl: 16px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+
+  /* Z-index */
+  --z-dropdown: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}

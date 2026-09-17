@@ -1,0 +1,9 @@
+#!/bin/sh
+commit_msg=$(cat "$1")
+pattern="^(feat|fix|docs|style|refactor|test|chore|ci|perf|build)(\(.+\))?: .{1,72}"
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo "❌ Invalid commit message: $commit_msg"
+  echo "Format: <type>(<scope>): <description>"
+  echo "Types: feat, fix, docs, style, refactor, test, chore, ci, perf, build"
+  exit 1
+fi

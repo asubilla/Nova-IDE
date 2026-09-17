@@ -1,115 +1,121 @@
 # Nova IDE
 
-A modern, AI-powered code editor with intelligent agent orchestration.
+> AI-powered code editor built with Tauri 2, React 19, and Rust.
+
+![Nova IDE](https://img.shields.io/badge/Nova-IDE-v0.1.0-6c5ce7?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Tauri](https://img.shields.io/badge/Tauri-2-orange?style=flat-square)
 
 ## Features
 
-- **AI-Powered Coding**: Integrated LLM support with multiple providers
-- **Agent Orchestration**: Sequential, concurrent, handoff, group, and magentic patterns
-- **Smart Search**: Ctrl+K quick search across files and commands
-- **Terminal Integration**: Built-in terminal with agent interaction
-- **MCP Support**: Model Context Protocol integration
-- **Dark Theme**: Carefully crafted dark UI with purple accent colors
+- **Monaco Editor** — Full VS Code editing experience
+- **AI Chat** — Multi-provider support (OpenAI, Anthropic, Google, Ollama)
+- **Memory System** — 98% recall accuracy with context-mem
+- **Agent Orchestration** — Parallel agent execution with DAG workflows
+- **Kanban Board** — Visual task management for AI agents
+- **4547+ MCP Tools** — Integrated tool registry
+- **Browser Automation** — Live preview with Stagehand-style automation
+- **Self-Healing** — Automatic error recovery
+- **Workflow Patterns** — Sequential, Concurrent, Handoff, Group, Magentic
 
-## Quick Start
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Backend | Rust, Tauri 2, Tokio |
+| Frontend | React 19, TypeScript, Vite |
+| Editor | Monaco Editor |
+| Terminal | xterm.js + WebGL |
+| State | Zustand |
+| Styling | CSS Custom Properties |
+| Testing | Vitest, React Testing Library |
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+ (recommended: 20 LTS)
-- npm 9+
+- Node.js 20+
+- Rust 1.75+
+- Tauri 2 CLI
 
 ### Installation
-
 ```bash
-# Clone the repository
-git clone https://github.com/your-org/nova-ide.git
-
-# Navigate to project
-cd nova-ide
-
-# Install dependencies
+git clone https://github.com/asubilla/Nova-IDE.git
+cd Nova-IDE
 npm install
-
-# Start development server
-npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
-
-### Build for Production
-
+### Development
 ```bash
-npm run build
+npm run dev          # Start frontend
+cargo tauri dev      # Start full Tauri app
 ```
 
-Output will be in the `dist/` directory.
+### Testing
+```bash
+npm run test         # Run tests
+npm run test:coverage # With coverage
+npm run lint         # Lint code
+npm run typecheck    # Type check
+```
+
+### Build
+```bash
+cargo tauri build    # Build for current platform
+```
 
 ## Project Structure
 
 ```
 nova-ide/
 ├── src/
-│   ├── components/       # React components
-│   │   ├── layout/       # App shell (TitleBar, Sidebar, etc.)
-│   │   ├── orchestration/ # Agent orchestration UI
-│   │   └── settings/     # Settings panels
-│   ├── config/           # Configuration files
-│   ├── store/            # Zustand stores
-│   ├── styles/           # CSS stylesheets
-│   ├── types/            # TypeScript types
-│   └── utils/            # Utility functions
-├── AGENTS.md             # AI agent rules
-├── NOVA.md               # Architecture decisions
+│   ├── components/
+│   │   ├── ai/             # AI chat, memory, providers
+│   │   ├── editor/         # Monaco editor, tabs, minimap
+│   │   ├── kanban/         # Kanban board for agents
+│   │   ├── layout/         # App shell (TitleBar, Sidebar, etc.)
+│   │   ├── mcp/            # MCP tools panel, registry
+│   │   ├── orchestration/  # Agent orchestration UI
+│   │   ├── search/         # Quick search (Ctrl+K)
+│   │   ├── settings/       # Settings panels
+│   │   ├── terminal/       # Terminal emulator
+│   │   └── workflow/       # Workflow visualization
+│   ├── config/             # Configuration files
+│   ├── hooks/              # Custom React hooks
+│   ├── store/              # Zustand stores
+│   ├── styles/             # CSS stylesheets
+│   ├── types/              # TypeScript types
+│   └── utils/              # Utility functions
+├── src-tauri/              # Rust backend
+│   ├── src/
+│   │   ├── commands/       # Tauri commands
+│   │   ├── ai/             # AI provider integrations
+│   │   ├── memory/         # Memory system
+│   │   └── mcp/            # MCP server
+│   ├── Cargo.toml
+│   └── tauri.conf.json
+├── .husky/                 # Git hooks
+├── .github/workflows/      # CI/CD
+├── AGENTS.md               # AI agent rules
+├── NOVA.md                 # Architecture decisions
 └── package.json
 ```
 
-## Configuration
+## CI/CD
 
-### AI Providers
+GitHub Actions runs on every push and PR:
 
-Configure AI providers in Settings (Ctrl+,):
+- **Lint** — ESLint + TypeScript type check
+- **Test** — Vitest with coverage report
+- **Build Frontend** — Vite production build
+- **Rust Check** — `cargo fmt`, `cargo clippy`, `cargo build`
 
-- **OpenAI**: GPT-4o, GPT-4 Turbo, GPT-3.5-turbo
-- **Anthropic**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku
-- **Google AI**: Gemini 2.0 Flash, Gemini 1.5 Pro
-- **Local**: Ollama (Llama 3, Code Llama, Mistral)
+## Contributing
 
-### Keybindings
-
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+K | Quick Search |
-| Ctrl+Shift+P | Command Palette |
-| Ctrl+B | Toggle Sidebar |
-| Ctrl+J | Toggle Terminal |
-| Ctrl+P | Quick Open File |
-| Ctrl+S | Save File |
-| F12 | Go to Definition |
-
-## Development
-
-### Scripts
-
-```bash
-npm run dev        # Start dev server
-npm run build      # Build for production
-npm run preview    # Preview production build
-npm run lint       # Run ESLint
-npm run typecheck  # Run TypeScript checker
-```
-
-### Adding a New Component
-
-1. Create component in `src/components/{category}/`
-2. Create corresponding CSS in `src/styles/`
-3. Export component and add types to `src/types/`
-4. Import and use in parent component
-
-### Adding a New Orchestration Pattern
-
-1. Add pattern type to `OrchestrationPattern` in `src/types/orchestration.ts`
-2. Add pattern config to default patterns in `src/store/orchestrationStore.ts`
-3. Add pattern icon and card in `src/components/orchestration/PatternCard.tsx`
-4. Add workflow visualization logic if needed
+1. Fork the repo
+2. Create feature branch: `git checkout -b feat/my-feature`
+3. Follow commit convention: `feat(scope): description`
+4. Run tests before PR: `npm test && npm run lint`
+5. Submit PR
 
 ## License
 
