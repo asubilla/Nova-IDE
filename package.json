@@ -2,7 +2,7 @@
   "name": "nova-subagent-ide",
   "version": "1.0.0",
   "description": "Autonomous AI-powered IDE with 147+ parallel agents, real-time streaming, real file operations, real terminal, real git integration, BYOK/BYOA support, 81 REST API endpoints, Electron desktop app, and production-grade security monitoring.",
-  "main": "dist/index.js",
+  "main": "electron/main.js",
   "types": "dist/index.d.ts",
   "bin": {
     "nova": "./dist/cli/index.js"
@@ -97,14 +97,18 @@
     "nova:package": "npm run nova:build && npm pack",
     "docker:build": "docker build -t nova-agent .",
     "docker:run": "docker-compose up -d",
-    "docker:stop": "docker-compose down"
+    "docker:stop": "docker-compose down",
+    "electron:build": "npm run build && electron-builder --publish never",
+    "electron:build:win": "npm run build && electron-builder --win --publish never",
+    "electron:build:mac": "npm run build && electron-builder --mac --publish never",
+    "electron:build:linux": "npm run build && electron-builder --linux --publish never",
+    "electron:build:all": "npm run build && electron-builder -wml --publish never"
   },
   "dependencies": {
     "uuid": "^9.0.1",
     "ws": "^8.21.3"
   },
   "devDependencies": {
-    "@electron/packager": "^20.3.0",
     "@types/node": "^20.10.0",
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.5.10",
@@ -112,9 +116,99 @@
     "@typescript-eslint/parser": "^6.0.0",
     "@vitest/coverage-v8": "^1.0.0",
     "electron": "^44.4.3",
+    "electron-builder": "^26.15.3",
     "eslint": "^8.50.0",
     "prettier": "^3.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.6.1"
+  },
+  "build": {
+    "appId": "com.nova.ide",
+    "productName": "Nova IDE",
+    "copyright": "Copyright © 2026 asubilla",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "web/**/*",
+      "electron/**/*",
+      "!electron/**/*.ts",
+      "package.json"
+    ],
+    "extraResources": [],
+    "asar": true,
+    "asarUnpack": [],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "electron/assets/icon.ico",
+      "artifactName": "Nova-IDE-${version}-win-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nova IDE",
+      "include": "build/installer.nsh",
+      "installerIcon": "electron/assets/icon.ico",
+      "uninstallerIcon": "electron/assets/icon.ico",
+      "installerHeaderIcon": "electron/assets/icon.ico",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "installerLanguages": [],
+      "language": "2052"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64"]
+        }
+      ],
+      "icon": "electron/assets/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "artifactName": "Nova-IDE-${version}-mac-${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "electron/assets",
+      "category": "Development",
+      "artifactName": "Nova-IDE-${version}-linux-${arch}.${ext}"
+    }
   }
 }

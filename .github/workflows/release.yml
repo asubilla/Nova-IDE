@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  build-web:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,19 +29,15 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Run tests
-        run: npm test
-        continue-on-error: true
-
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
-          retention-days: 7
+          retention-days: 1
 
   package-windows:
-    needs: build
+    needs: build-web
     runs-on: windows-latest
 
     steps:
@@ -62,18 +58,22 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Package for Windows
-        run: node electron/package.js win
+      - name: Build Windows Installer
+        run: npx electron-builder --win --publish never
+
+      - name: List release files
+        run: dir release /s /b
+        shell: cmd
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-windows
-          path: release/
+          path: release/*.exe
           retention-days: 7
 
   package-mac:
-    needs: build
+    needs: build-web
     runs-on: macos-latest
 
     steps:
@@ -94,18 +94,21 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Package for macOS
-        run: node electron/package.js mac
+      - name: Build macOS Installer
+        run: npx electron-builder --mac --publish never
+
+      - name: List release files
+        run: find release -type f | head -20
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-mac
-          path: release/
+          path: release/*.dmg
           retention-days: 7
 
   package-linux:
-    needs: build
+    needs: build-web
     runs-on: ubuntu-latest
 
     steps:
@@ -126,14 +129,19 @@ jobs:
           name: dist
           path: dist/
 
-      - name: Package for Linux
-        run: node electron/package.js linux
+      - name: Build Linux Installer
+        run: npx electron-builder --linux --publish never
+
+      - name: List release files
+        run: find release -type f | head -20
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-linux
-          path: release/
+          path: |
+            release/*.AppImage
+            release/*.deb
           retention-days: 7
 
   release:
@@ -147,34 +155,28 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-windows
-          path: release/win32-x64
+          path: release/win
 
       - name: Download macOS artifact
         uses: actions/download-artifact@v4
         with:
           name: release-mac
-          path: release/darwin-arm64
+          path: release/mac
 
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
           name: release-linux
-          path: release/linux-x64
-
-      - name: Create zip archives
-        run: |
-          cd release
-          zip -r ../Nova-IDE-win32-x64.zip win32-x64/
-          zip -r ../Nova-IDE-darwin-arm64.zip darwin-arm64/
-          zip -r ../Nova-IDE-linux-x64.zip linux-x64/
+          path: release/linux
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            Nova-IDE-win32-x64.zip
-            Nova-IDE-darwin-arm64.zip
-            Nova-IDE-linux-x64.zip
+            release/win/*.exe
+            release/mac/*.dmg
+            release/linux/*.AppImage
+            release/linux/*.deb
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

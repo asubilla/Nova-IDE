@@ -6,8 +6,23 @@ import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
+const isDev = !app.isPackaged;
 
 let mainWindow: BrowserWindow | null = null;
+
+function getWebPath(): string {
+  if (isDev) {
+    return path.join(__dirname, "..", "web", "index.html");
+  }
+  return path.join(process.resourcesPath, "web", "index.html");
+}
+
+function getPreloadPath(): string {
+  if (isDev) {
+    return path.join(__dirname, "preload.js");
+  }
+  return path.join(__dirname, "preload.js");
+}
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -16,8 +31,10 @@ function createWindow(): void {
     minWidth: 800,
     minHeight: 600,
     backgroundColor: "#1e1e2e",
+    title: "Nova IDE",
+    icon: path.join(__dirname, "..", "electron", "assets", "icon.png"),
     webPreferences: {
-      preload: path.join(__dirname, "preload.js"),
+      preload: getPreloadPath(),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
@@ -26,7 +43,12 @@ function createWindow(): void {
     show: false,
   });
 
-  mainWindow.loadFile(path.join(__dirname, "../web/index.html"));
+  const webPath = getWebPath();
+  if (existsSync(webPath)) {
+    mainWindow.loadFile(webPath);
+  } else {
+    mainWindow.loadURL("data:text/html,<h1>Nova IDE - Build assets missing</h1><p>Run 'npm run build' first.</p>");
+  }
 
   mainWindow.once("ready-to-show", () => {
     mainWindow?.show();
