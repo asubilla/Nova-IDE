@@ -169,9 +169,6 @@
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
       "warningsAsErrors": false,
-      "displayLanguageSelector": true,
-      "installerLanguages": ["2052", "1033", "1049", "1031", "1036", "1041", "1046", "1040"],
-      "language": "1033",
       "unicode": true
     },
     "mac": {
