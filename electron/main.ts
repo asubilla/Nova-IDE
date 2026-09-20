@@ -655,6 +655,79 @@ ipcMain.handle("debug:stack", () => {
   return { frames: debugSession ? [{ file: "main.ts", line: 1, function: "main" }] : [], totalFrames: debugSession ? 1 : 0 };
 });
 
+// ─── IPC Handlers: MCP (Model Context Protocol) ────────────────────────────
+
+const mcpServers = new Map<string, any>([
+  ["playwright", { id: "playwright", name: "Playwright", type: "mcp", enabled: true, command: "npx @anthropic-ai/mcp-server-playwright", description: "Browser automation via Playwright", status: "connected" }],
+  ["filesystem", { id: "filesystem", name: "Filesystem", type: "mcp", enabled: true, command: "npx @anthropic-ai/mcp-server-filesystem", description: "File system operations", status: "connected" }],
+  ["github", { id: "github", name: "GitHub", type: "mcp", enabled: false, command: "npx @anthropic-ai/mcp-server-github", description: "GitHub API integration", status: "disconnected" }],
+  ["postgres", { id: "postgres", name: "PostgreSQL", type: "mcp", enabled: false, command: "npx @anthropic-ai/mcp-server-postgres", description: "PostgreSQL database access", status: "disconnected" }],
+]);
+
+ipcMain.handle("mcp:list", () => Array.from(mcpServers.values()));
+ipcMain.handle("mcp:toggle", (_event, id: string, enabled: boolean) => {
+  const server = mcpServers.get(id);
+  if (server) { server.enabled = enabled; server.status = enabled ? "connected" : "disconnected"; }
+  return server;
+});
+ipcMain.handle("mcp:add", (_event, server: any) => {
+  mcpServers.set(server.id, { ...server, status: "disconnected" });
+  return mcpServers.get(server.id);
+});
+ipcMain.handle("mcp:remove", (_event, id: string) => { mcpServers.delete(id); return { deleted: true }; });
+
+// ─── IPC Handlers: LSP (Language Server Protocol) ──────────────────────────
+
+const lspServers = new Map<string, any>([
+  ["typescript", { id: "typescript", name: "TypeScript", language: "typescript", enabled: true, status: "active", features: ["completion", "hover", "diagnostics", "formatting", "refactoring"] }],
+  ["python", { id: "python", name: "Python (Pylance)", language: "python", enabled: true, status: "active", features: ["completion", "hover", "diagnostics", "formatting"] }],
+  ["rust", { id: "rust", name: "Rust Analyzer", language: "rust", enabled: true, status: "active", features: ["completion", "hover", "diagnostics", "inlay-hints"] }],
+  ["go", { id: "go", name: "Go (gopls)", language: "go", enabled: true, status: "active", features: ["completion", "hover", "diagnostics", "formatting"] }],
+]);
+
+ipcMain.handle("lsp:list", () => Array.from(lspServers.values()));
+ipcMain.handle("lsp:toggle", (_event, id: string, enabled: boolean) => {
+  const server = lspServers.get(id);
+  if (server) { server.enabled = enabled; server.status = enabled ? "active" : "inactive"; }
+  return server;
+});
+
+// ─── IPC Handlers: Plugins ─────────────────────────────────────────────────
+
+const plugins = new Map<string, any>([
+  ["prettier", { id: "prettier", name: "Prettier", version: "3.2.0", enabled: true, description: "Code formatter", config: "prettier.config.js" }],
+  ["eslint", { id: "eslint", name: "ESLint", version: "9.0.0", enabled: true, description: "JavaScript linter", config: ".eslintrc.json" }],
+  ["gitlens", { id: "gitlens", name: "GitLens", version: "15.0.0", enabled: true, description: "Git supercharged" }],
+  ["copilot", { id: "copilot", name: "GitHub Copilot", version: "1.0.0", enabled: false, description: "AI pair programming" }],
+  ["dotenv", { id: "dotenv", name: "DotENV", version: "1.0.0", enabled: true, description: "Environment variable support", config: ".env" }],
+  ["errorlens", { id: "errorlens", name: "Error Lens", version: "3.0.0", enabled: true, description: "Inline error decorations" }],
+]);
+
+ipcMain.handle("plugins:list", () => Array.from(plugins.values()));
+ipcMain.handle("plugins:toggle", (_event, id: string, enabled: boolean) => {
+  const plugin = plugins.get(id);
+  if (plugin) plugin.enabled = enabled;
+  return plugin;
+});
+ipcMain.handle("plugins:config", (_event, id: string) => {
+  const plugin = plugins.get(id);
+  return plugin ? { id: plugin.id, name: plugin.name, config: plugin.config || null } : null;
+});
+
+// ─── IPC Handlers: Editor ──────────────────────────────────────────────────
+
+ipcMain.handle("editor:toggle", (_event, enabled: boolean) => {
+  addLog("info", "editor", `Editor ${enabled ? "enabled" : "disabled"}`);
+  return { enabled };
+});
+
+ipcMain.handle("editor:diff", async (_event, filePath: string) => {
+  try {
+    const content = await fs.readFile(filePath, "utf-8");
+    return { filePath, original: content, modified: content };
+  } catch { return null; }
+});
+
 // ─── IPC Handlers: App Info ───────────────────────────────────────────────────
 
 ipcMain.handle("app:version", () => {

@@ -87,6 +87,25 @@ const novaAPI = {
     continue: wrapInvoke(() => invoke("debug:continue")),
     getStack: wrapInvoke(() => invoke("debug:stack")),
   },
+  mcp: {
+    list: wrapInvoke(() => invoke("mcp:list")),
+    toggle: wrapInvoke((id: string, e: boolean) => invoke("mcp:toggle", id, e)),
+    add: wrapInvoke((s: any) => invoke("mcp:add", s)),
+    remove: wrapInvoke((id: string) => invoke("mcp:remove", id)),
+  },
+  lsp: {
+    list: wrapInvoke(() => invoke("lsp:list")),
+    toggle: wrapInvoke((id: string, e: boolean) => invoke("lsp:toggle", id, e)),
+  },
+  plugins: {
+    list: wrapInvoke(() => invoke("plugins:list")),
+    toggle: wrapInvoke((id: string, e: boolean) => invoke("plugins:toggle", id, e)),
+    config: wrapInvoke((id: string) => invoke("plugins:config", id)),
+  },
+  editor: {
+    toggle: wrapInvoke((e: boolean) => invoke("editor:toggle", e)),
+    diff: wrapInvoke((p: string) => invoke("editor:diff", p)),
+  },
   app: {
     version: wrapInvoke(() => invoke("app:version")),
     path: wrapInvoke((n: string) => invoke("app:path", n)),
