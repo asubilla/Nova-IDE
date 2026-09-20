@@ -106,6 +106,20 @@ const novaAPI = {
     toggle: wrapInvoke((e: boolean) => invoke("editor:toggle", e)),
     diff: wrapInvoke((p: string) => invoke("editor:diff", p)),
   },
+  settings: {
+    get: wrapInvoke(() => invoke("settings:get")),
+    set: wrapInvoke((u: any) => invoke("settings:set", u)),
+    getAll: wrapInvoke(() => invoke("settings:getAll")),
+    reset: wrapInvoke(() => invoke("settings:reset")),
+    isFirstRun: wrapInvoke(() => invoke("settings:isFirstRun")),
+    completeFirstRun: wrapInvoke(() => invoke("settings:completeFirstRun")),
+    addRecentWorkspace: wrapInvoke((w: string) => invoke("settings:addRecentWorkspace", w)),
+  },
+  system: {
+    getFreeSpace: wrapInvoke((p: string) => invoke("system:getFreeSpace", p)),
+    getDrives: wrapInvoke(() => invoke("system:getDrives")),
+    validatePath: wrapInvoke((p: string) => invoke("system:validatePath", p)),
+  },
   app: {
     version: wrapInvoke(() => invoke("app:version")),
     path: wrapInvoke((n: string) => invoke("app:path", n)),

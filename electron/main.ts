@@ -10,6 +10,132 @@ const isDev = !app.isPackaged;
 
 let mainWindow: BrowserWindow | null = null;
 
+// ─── Settings Persistence ──────────────────────────────────────────────────────
+const SETTINGS_DIR = path.join(app.getPath("userData"), "settings");
+const SETTINGS_FILE = path.join(SETTINGS_DIR, "nova-settings.json");
+const FIRST_RUN_FILE = path.join(SETTINGS_DIR, ".first-run-done");
+
+interface NovaSettings {
+  firstRun: boolean;
+  theme: string;
+  fontSize: number;
+  fontFamily: string;
+  minimap: boolean;
+  wordWrap: boolean;
+  lineNumbers: boolean;
+  smoothScrolling: boolean;
+  autoSave: boolean;
+  autoSaveDelay: number;
+  tabSize: number;
+  insertSpaces: boolean;
+  cursorStyle: string;
+  cursorBlinking: string;
+  renderWhitespace: string;
+  bracketPairColorization: boolean;
+  mouseWheelZoom: boolean;
+  folding: boolean;
+  stickyScroll: boolean;
+  suggestOnTriggerCharacters: boolean;
+  quickSuggestions: boolean;
+  formatOnPaste: boolean;
+  formatOnSave: boolean;
+  terminalShell: string;
+  gitAutofetch: boolean;
+  aiProvider: string;
+  aiModel: string;
+  aiApiKey: string;
+  features: {
+    addPath: boolean;
+    desktopShortcut: boolean;
+    startMenuShortcut: boolean;
+    contextMenu: boolean;
+    fileAssociation: boolean;
+  };
+  recentWorkspaces: string[];
+}
+
+const DEFAULT_SETTINGS: NovaSettings = {
+  firstRun: true,
+  theme: "nova-dark",
+  fontSize: 14,
+  fontFamily: "'Cascadia Code','Fira Code','JetBrains Mono',Consolas,monospace",
+  minimap: true,
+  wordWrap: false,
+  lineNumbers: true,
+  smoothScrolling: true,
+  autoSave: false,
+  autoSaveDelay: 1000,
+  tabSize: 2,
+  insertSpaces: true,
+  cursorStyle: "line",
+  cursorBlinking: "smooth",
+  renderWhitespace: "selection",
+  bracketPairColorization: true,
+  mouseWheelZoom: true,
+  folding: true,
+  stickyScroll: true,
+  suggestOnTriggerCharacters: true,
+  quickSuggestions: true,
+  formatOnPaste: false,
+  formatOnSave: false,
+  terminalShell: "",
+  gitAutofetch: true,
+  aiProvider: "openai",
+  aiModel: "gpt-4o-mini",
+  aiApiKey: "",
+  features: {
+    addPath: true,
+    desktopShortcut: true,
+    startMenuShortcut: true,
+    contextMenu: true,
+    fileAssociation: true,
+  },
+  recentWorkspaces: [],
+};
+
+let currentSettings: NovaSettings = { ...DEFAULT_SETTINGS };
+
+async function ensureSettingsDir() {
+  try {
+    await fs.mkdir(SETTINGS_DIR, { recursive: true });
+  } catch {}
+}
+
+async function loadSettings(): Promise<NovaSettings> {
+  try {
+    if (existsSync(SETTINGS_FILE)) {
+      const raw = await fs.readFile(SETTINGS_FILE, "utf-8");
+      const saved = JSON.parse(raw);
+      return { ...DEFAULT_SETTINGS, ...saved };
+    }
+  } catch {}
+  return { ...DEFAULT_SETTINGS };
+}
+
+async function saveSettings(settings: NovaSettings): Promise<void> {
+  await ensureSettingsDir();
+  await fs.writeFile(SETTINGS_FILE, JSON.stringify(settings, null, 2), "utf-8");
+}
+
+async function isFirstRun(): Promise<boolean> {
+  try {
+    if (existsSync(FIRST_RUN_FILE)) return false;
+    const settings = await loadSettings();
+    return settings.firstRun;
+  } catch {
+    return true;
+  }
+}
+
+async function markFirstRunDone(): Promise<void> {
+  currentSettings.firstRun = false;
+  await saveSettings(currentSettings);
+  await ensureSettingsDir();
+  await fs.writeFile(FIRST_RUN_FILE, new Date().toISOString(), "utf-8");
+}
+
+// ─── Window Creation ───────────────────────────────────────────────────────────
+
 function getWebPath(): string {
   if (isDev) {
     return path.join(__dirname, "..", "web", "index.html");
@@ -742,9 +868,90 @@ ipcMain.handle("app:platform", () => {
   return process.platform;
 });
 
+// ─── IPC Handlers: Settings ──────────────────────────────────────────────────
+
+ipcMain.handle("settings:get", async () => {
+  if (currentSettings.firstRun) {
+    currentSettings = await loadSettings();
+  }
+  return currentSettings;
+});
+
+ipcMain.handle("settings:set", async (_event, updates: Partial<NovaSettings>) => {
+  currentSettings = { ...currentSettings, ...updates };
+  await saveSettings(currentSettings);
+  return currentSettings;
+});
+
+ipcMain.handle("settings:getAll", async () => {
+  currentSettings = await loadSettings();
+  return currentSettings;
+});
+
+ipcMain.handle("settings:reset", async () => {
+  currentSettings = { ...DEFAULT_SETTINGS };
+  await saveSettings(currentSettings);
+  return currentSettings;
+});
+
+ipcMain.handle("settings:isFirstRun", async () => {
+  return isFirstRun();
+});
+
+ipcMain.handle("settings:completeFirstRun", async () => {
+  await markFirstRunDone();
+  return { success: true };
+});
+
+ipcMain.handle("settings:addRecentWorkspace", async (_event, workspace: string) => {
+  currentSettings.recentWorkspaces = [
+    workspace,
+    ...currentSettings.recentWorkspaces.filter((w) => w !== workspace),
+  ].slice(0, 20);
+  await saveSettings(currentSettings);
+  return currentSettings.recentWorkspaces;
+});
+
+// ─── IPC Handlers: System ─────────────────────────────────────────────────────
+
+ipcMain.handle("system:getFreeSpace", async (_event, dirPath: string) => {
+  try {
+    const { stdout } = await execAsync(`powershell -Command "(Get-PSDrive -Name ${dirPath.charAt(0)}).Free / 1GB"`, { timeout: 5000 });
+    return { freeGB: parseFloat(stdout.trim()), available: true };
+  } catch {
+    return { freeGB: 0, available: false };
+  }
+});
+
+ipcMain.handle("system:getDrives", async () => {
+  try {
+    const { stdout } = await execAsync('powershell -Command "Get-PSDrive -PSProvider FileSystem | Select-Object Name,Free,Used | ConvertTo-Json"', { timeout: 5000 });
+    return JSON.parse(stdout);
+  } catch {
+    return [];
+  }
+});
+
+ipcMain.handle("system:validatePath", async (_event, dirPath: string) => {
+  try {
+    await fs.access(dirPath, fs.constants.W_OK);
+    return { writable: true, exists: true };
+  } catch {
+    try {
+      await fs.access(path.dirname(dirPath), fs.constants.W_OK);
+      return { writable: true, exists: false };
+    } catch {
+      return { writable: false, exists: false };
+    }
+  }
+});
+
 // ─── App Lifecycle ────────────────────────────────────────────────────────────
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  currentSettings = await loadSettings();
+  createWindow();
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

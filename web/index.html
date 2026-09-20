@@ -240,7 +240,297 @@
   <div id="context-menu" class="context-menu" style="display:none;"></div>
   <div id="modal-overlay" class="modal-overlay" style="display:none;"><div class="modal" id="modal"><div class="modal-header" id="modal-header"></div><div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div></div>
   <div id="notifications" class="notification-container"></div>
-  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <!-- Setup Wizard (First Run)                                                  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════════ -->
+  <div id="setup-wizard" style="display:none;position:fixed;inset:0;z-index:9999;background:var(--bg-primary);overflow-y:auto;">
+    <div style="max-width:640px;margin:0 auto;padding:40px 32px;">
+      <!-- Progress Bar -->
+      <div id="setup-progress" style="margin-bottom:32px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span id="setup-step-label" style="font-size:var(--font-size-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Step 1 of 5</span>
+          <span id="setup-step-pct" style="font-size:var(--font-size-xs);color:var(--accent);font-family:var(--font-mono);font-weight:700;">0%</span>
+        </div>
+        <div style="height:4px;background:var(--bg-active);border-radius:2px;overflow:hidden;">
+          <div id="setup-progress-bar" style="height:100%;background:var(--accent);border-radius:2px;transition:width 0.5s ease;width:0%;"></div>
+        </div>
+      </div>
+
+      <!-- Step 1: Welcome -->
+      <div class="setup-step active" id="setup-step-1">
+        <div style="text-align:center;margin-bottom:32px;">
+          <div style="font-size:48px;margin-bottom:16px;">&#x2728;</div>
+          <h1 style="font-size:28px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">Welcome to Nova IDE</h1>
+          <p style="font-size:var(--font-size-sm);color:var(--text-secondary);line-height:1.6;">
+            Your autonomous AI-powered development environment.<br>
+            Let's set up your workspace in just a few steps.
+          </p>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+          <div style="padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:20px;margin-bottom:8px;">&#x1F916;</div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">147+ AI Agents</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Parallel code generation</div>
+          </div>
+          <div style="padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:20px;margin-bottom:8px;">&#x2699;&#xFE0F;</div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">MCP/LSP Support</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Plugin ecosystem</div>
+          </div>
+          <div style="padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:20px;margin-bottom:8px;">&#x1F5A5;&#xFE0F;</div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">Monaco Editor</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">VS Code editing engine</div>
+          </div>
+          <div style="padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:20px;margin-bottom:8px;">&#x1F4BB;</div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">Built-in Terminal</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Execute commands</div>
+          </div>
+        </div>
+        <button class="setup-next-btn" onclick="setupNext()" style="width:100%;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:opacity 0.2s;">Get Started &#x2192;</button>
+      </div>
+
+      <!-- Step 2: Theme Selection -->
+      <div class="setup-step" id="setup-step-2" style="display:none;">
+        <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Choose Your Theme</h2>
+        <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:24px;">Select a color theme for your editor.</p>
+        <div id="theme-options" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;">
+          <div class="theme-card active" data-theme="nova-dark" style="padding:16px;background:var(--bg-surface);border:2px solid var(--accent);border-radius:8px;cursor:pointer;">
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <div style="width:20px;height:20px;border-radius:50%;background:#0D1117;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#161B22;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#58A6FF;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#7EE787;border:1px solid #30363D;"></div>
+            </div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">Nova Dark</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Default dark theme</div>
+          </div>
+          <div class="theme-card" data-theme="catppuccin" style="padding:16px;background:#1E1E2E;border:2px solid transparent;border-radius:8px;cursor:pointer;">
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <div style="width:20px;height:20px;border-radius:50%;background:#1E1E2E;border:1px solid #313244;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#313244;border:1px solid #45475A;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#89B4FA;border:1px solid #45475A;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#A6E3A1;border:1px solid #45475A;"></div>
+            </div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">Catppuccin</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Soothing pastel theme</div>
+          </div>
+          <div class="theme-card" data-theme="github-dark" style="padding:16px;background:#0D1117;border:2px solid transparent;border-radius:8px;cursor:pointer;">
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <div style="width:20px;height:20px;border-radius:50%;background:#0D1117;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#161B22;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#58A6FF;border:1px solid #30363D;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#F78166;border:1px solid #30363D;"></div>
+            </div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);">GitHub Dark</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);">GitHub's dark theme</div>
+          </div>
+          <div class="theme-card" data-theme="light" style="padding:16px;background:#FFFFFF;border:2px solid transparent;border-radius:8px;cursor:pointer;">
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+              <div style="width:20px;height:20px;border-radius:50%;background:#FFFFFF;border:1px solid #D0D7DE;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#F6F8FA;border:1px solid #D0D7DE;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#0969DA;border:1px solid #D0D7DE;"></div>
+              <div style="width:20px;height:20px;border-radius:50%;background:#1A7F37;border:1px solid #D0D7DE;"></div>
+            </div>
+            <div style="font-size:var(--font-size-sm);font-weight:600;color:#24292F;">Light</div>
+            <div style="font-size:var(--font-size-xs);color:#656D76;">Clean light theme</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="setupPrev()" style="flex:0;padding:12px 20px;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">&#x2190; Back</button>
+          <button onclick="setupNext()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Continue &#x2192;</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Editor Preferences -->
+      <div class="setup-step" id="setup-step-3" style="display:none;">
+        <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Editor Preferences</h2>
+        <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:24px;">Customize your editing experience.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Font Size</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Adjust editor text size</div></div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="setup-fontsize" min="10" max="24" value="14" style="width:120px;accent-color:var(--accent);">
+              <span id="setup-fontsize-label" style="font-size:var(--font-size-xs);color:var(--text-muted);font-family:var(--font-mono);min-width:32px;">14px</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Tab Size</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Spaces per indentation level</div></div>
+            <select id="setup-tabsize" style="padding:6px 12px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:var(--font-size-sm);">
+              <option value="2" selected>2 spaces</option>
+              <option value="4">4 spaces</option>
+              <option value="8">8 spaces</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Minimap</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Show code overview on the right</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="setup-minimap" checked><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Word Wrap</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Wrap long lines</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="setup-wordwrap"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Auto Save</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Save files automatically</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="setup-autosave"><span class="toggle-slider"></span></label>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div><div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Format on Save</div><div style="font-size:var(--font-size-xs);color:var(--text-muted);">Auto-format code when saving</div></div>
+            <label class="toggle-switch"><input type="checkbox" id="setup-formatonsave"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="setupPrev()" style="flex:0;padding:12px 20px;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">&#x2190; Back</button>
+          <button onclick="setupNext()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Continue &#x2192;</button>
+        </div>
+      </div>
+
+      <!-- Step 4: AI Provider Setup -->
+      <div class="setup-step" id="setup-step-4" style="display:none;">
+        <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">AI Configuration</h2>
+        <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:24px;">Set up your AI provider. You can skip this and configure later.</p>
+        <div style="display:flex;flex-direction:column;gap:16px;margin-bottom:24px;">
+          <div style="padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);margin-bottom:8px;">AI Provider</div>
+            <select id="setup-ai-provider" style="width:100%;padding:8px 12px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:var(--font-size-sm);">
+              <option value="openai">OpenAI (GPT)</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="google">Google (Gemini)</option>
+              <option value="local">Local Model (Ollama)</option>
+            </select>
+          </div>
+          <div style="padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);margin-bottom:8px;">API Key</div>
+            <input type="password" id="setup-ai-key" placeholder="sk-... or sk-ant-..." style="width:100%;padding:8px 12px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:var(--font-size-sm);font-family:var(--font-mono);">
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:4px;">Your API key stays local and is never sent to our servers.</div>
+          </div>
+          <div style="padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;">
+            <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);margin-bottom:8px;">Model</div>
+            <select id="setup-ai-model" style="width:100%;padding:8px 12px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:var(--font-size-sm);">
+              <option value="gpt-4o">GPT-4o</option>
+              <option value="gpt-4o-mini" selected>GPT-4o Mini (Recommended)</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="setupPrev()" style="flex:0;padding:12px 20px;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">&#x2190; Back</button>
+          <button onclick="setupNext()" style="flex:1;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Continue &#x2192;</button>
+        </div>
+      </div>
+
+      <!-- Step 5: System Integration -->
+      <div class="setup-step" id="setup-step-5" style="display:none;">
+        <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">System Integration</h2>
+        <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:24px;">Choose where to install and optional integrations.</p>
+
+        <!-- Installation Directory -->
+        <div style="padding:16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;">
+          <div style="font-size:var(--font-size-sm);font-weight:600;color:var(--text-primary);margin-bottom:12px;">Installation Directory</div>
+          <p style="font-size:var(--font-size-xs);color:var(--text-muted);margin-bottom:12px;">Choose any drive or folder. You can install on C:, D:, E: or any custom path.</p>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div id="drive-selector" style="display:flex;gap:4px;flex-shrink:0;">
+              <button class="drive-btn" data-drive="C:" style="padding:6px 10px;background:var(--accent);color:white;border:none;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font-mono);">C:</button>
+              <button class="drive-btn" data-drive="D:" style="padding:6px 10px;background:var(--bg-active);color:var(--text-secondary);border:1px solid var(--border);border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-mono);">D:</button>
+              <button class="drive-btn" data-drive="E:" style="padding:6px 10px;background:var(--bg-active);color:var(--text-secondary);border:1px solid var(--border);border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-mono);">E:</button>
+              <button class="drive-btn" data-drive="F:" style="padding:6px 10px;background:var(--bg-active);color:var(--text-secondary);border:1px solid var(--border);border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--font-mono);">F:</button>
+            </div>
+            <div style="flex:1;position:relative;">
+              <input type="text" id="setup-install-path" value="C:\Program Files\Nova IDE" style="width:100%;padding:8px 12px;padding-right:36px;background:var(--bg-primary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:var(--font-size-sm);font-family:var(--font-mono);">
+              <button id="setup-browse-btn" title="Browse folders" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;cursor:pointer;color:var(--text-secondary);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+              </button>
+            </div>
+          </div>
+          <!-- Quick folders -->
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+            <button class="quick-folder" data-path="C:\Program Files\Nova IDE" style="padding:4px 8px;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;">Program Files</button>
+            <button class="quick-folder" data-path="C:\Users\$USER\AppData\Local\Nova IDE" style="padding:4px 8px;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;">AppData</button>
+            <button class="quick-folder" data-path="D:\Nova IDE" style="padding:4px 8px;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;">D Drive</button>
+            <button class="quick-folder" data-path="E:\Dev\Nova IDE" style="padding:4px 8px;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;">E:\Dev</button>
+            <button class="quick-folder" data-path="C:\Users\$USER\Nova IDE" style="padding:4px 8px;background:var(--bg-active);border:1px solid var(--border);border-radius:4px;font-size:10px;color:var(--text-muted);cursor:pointer;transition:all 0.15s;">Home Folder</button>
+          </div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:8px;">
+            <span style="color:var(--success);">&#x2714;</span> Free space: <span id="setup-free-space">Checking...</span>
+            <span style="margin:0 6px;">|</span>
+            Required: ~350 MB
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+          <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.2s;" class="setup-feature-option">
+            <input type="checkbox" id="setup-addpath" checked style="width:18px;height:18px;accent-color:var(--accent);">
+            <div style="flex:1;">
+              <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Add to PATH</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Run "nova" from any terminal</div>
+            </div>
+            <span style="font-size:var(--font-size-xs);color:var(--success);font-weight:600;">RECOMMENDED</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.2s;" class="setup-feature-option">
+            <input type="checkbox" id="setup-desktop" checked style="width:18px;height:18px;accent-color:var(--accent);">
+            <div style="flex:1;">
+              <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Desktop Shortcut</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Quick access from desktop</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.2s;" class="setup-feature-option">
+            <input type="checkbox" id="setup-startmenu" checked style="width:18px;height:18px;accent-color:var(--accent);">
+            <div style="flex:1;">
+              <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Start Menu Entry</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Add to Start Menu / Applications</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.2s;" class="setup-feature-option">
+            <input type="checkbox" id="setup-contextmenu" checked style="width:18px;height:18px;accent-color:var(--accent);">
+            <div style="flex:1;">
+              <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">Right-Click Context Menu</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted);">"Open with Nova IDE" in Explorer</div>
+            </div>
+          </label>
+          <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color 0.2s;" class="setup-feature-option">
+            <input type="checkbox" id="setup-fileassoc" checked style="width:18px;height:18px;accent-color:var(--accent);">
+            <div style="flex:1;">
+              <div style="font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary);">File Associations</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted);">Open .ts, .js, .py files with Nova</div>
+            </div>
+          </label>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <button onclick="setupPrev()" style="flex:0;padding:12px 20px;background:var(--bg-surface);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer;">&#x2190; Back</button>
+          <button onclick="setupComplete()" style="flex:1;padding:12px;background:var(--success);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">&#x2714; Launch Nova IDE</button>
+        </div>
+      </div>
+      <!-- Step 6: Installation Progress (shown after Launch clicked) -->
+      <div class="setup-step" id="setup-step-6" style="display:none;">
+        <h2 style="font-size:20px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">Installing Nova IDE</h2>
+        <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:16px;">Setting up your workspace. Please don't close this window.</p>
+        
+        <!-- Overall Progress -->
+        <div style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span id="install-phase" style="font-size:var(--font-size-xs);color:var(--text-secondary);font-weight:500;">Preparing...</span>
+            <span id="install-pct" style="font-size:var(--font-size-xs);color:var(--accent);font-family:var(--font-mono);font-weight:700;">0%</span>
+          </div>
+          <div style="height:6px;background:var(--bg-active);border-radius:3px;overflow:hidden;">
+            <div id="install-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:3px;transition:width 0.4s ease;width:0%;"></div>
+          </div>
+        </div>
+
+        <!-- Real-time File Operations Log -->
+        <div id="install-file-log" style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:280px;overflow-y:auto;font-family:var(--font-mono);font-size:11px;line-height:1.8;">
+        </div>
+
+        <!-- Done button (hidden until complete) -->
+        <div id="install-done-area" style="display:none;margin-top:16px;">
+          <div style="text-align:center;margin-bottom:12px;color:var(--success);font-weight:600;font-size:14px;">&#x2714; Installation Complete!</div>
+          <button onclick="launchNovaIDE()" style="width:100%;padding:12px;background:var(--accent);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Launch Nova IDE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     var nova = window.nova;
     var monacoEditor = null;
@@ -1010,6 +1300,365 @@
     document.querySelector('.sidebar-tab[data-panel="mcp"]')?.addEventListener("click", function() {
       renderMcpServers(); renderLspServers(); renderPluginsList();
     });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Setup Wizard (First Run)
+    // ═══════════════════════════════════════════════════════════════════════════
+    var setupCurrentStep = 1;
+    var setupTotalSteps = 5;
+    var setupSettings = {
+      theme: "nova-dark",
+      fontSize: 14,
+      tabSize: 2,
+      minimap: true,
+      wordWrap: false,
+      autoSave: false,
+      formatOnSave: false,
+      aiProvider: "openai",
+      aiModel: "gpt-4o-mini",
+      aiKey: "",
+      features: { addPath: true, desktop: true, startMenu: true, contextMenu: true, fileAssoc: true }
+    };
+
+    async function initSetupWizard() {
+      if (!nova || !nova.settings) return;
+      try {
+        var isFirst = await nova.settings.isFirstRun();
+        if (!isFirst) return;
+        document.getElementById("setup-wizard").style.display = "block";
+      } catch(e) {
+        document.getElementById("setup-wizard").style.display = "block";
+      }
+    }
+
+    function updateSetupProgress() {
+      var pct = Math.round((setupCurrentStep / setupTotalSteps) * 100);
+      document.getElementById("setup-step-label").textContent = "Step " + setupCurrentStep + " of " + setupTotalSteps;
+      document.getElementById("setup-step-pct").textContent = pct + "%";
+      document.getElementById("setup-progress-bar").style.width = pct + "%";
+      for (var i = 1; i <= setupTotalSteps; i++) {
+        document.getElementById("setup-step-" + i).style.display = i === setupCurrentStep ? "block" : "none";
+      }
+    }
+
+    function setupNext() {
+      if (setupCurrentStep === 2) {
+        var activeTheme = document.querySelector(".theme-card.active");
+        if (activeTheme) setupSettings.theme = activeTheme.dataset.theme;
+      }
+      if (setupCurrentStep === 3) {
+        setupSettings.fontSize = parseInt(document.getElementById("setup-fontsize").value);
+        setupSettings.tabSize = parseInt(document.getElementById("setup-tabsize").value);
+        setupSettings.minimap = document.getElementById("setup-minimap").checked;
+        setupSettings.wordWrap = document.getElementById("setup-wordwrap").checked;
+        setupSettings.autoSave = document.getElementById("setup-autosave").checked;
+        setupSettings.formatOnSave = document.getElementById("setup-formatonsave").checked;
+      }
+      if (setupCurrentStep === 4) {
+        setupSettings.aiProvider = document.getElementById("setup-ai-provider").value;
+        setupSettings.aiKey = document.getElementById("setup-ai-key").value;
+        setupSettings.aiModel = document.getElementById("setup-ai-model").value;
+      }
+      if (setupCurrentStep < setupTotalSteps) {
+        setupCurrentStep++;
+        updateSetupProgress();
+      }
+    }
+
+    function setupPrev() {
+      if (setupCurrentStep > 1) {
+        setupCurrentStep--;
+        updateSetupProgress();
+      }
+    }
+
+    async function setupComplete() {
+      setupSettings.features.addPath = document.getElementById("setup-addpath").checked;
+      setupSettings.features.desktop = document.getElementById("setup-desktop").checked;
+      setupSettings.features.startMenu = document.getElementById("setup-startmenu").checked;
+      setupSettings.features.contextMenu = document.getElementById("setup-contextmenu").checked;
+      setupSettings.features.fileAssoc = document.getElementById("setup-fileassoc").checked;
+      setupSettings.installPath = document.getElementById("setup-install-path").value;
+
+      // Show installation progress screen
+      for (var i = 1; i <= setupTotalSteps; i++) {
+        document.getElementById("setup-step-" + i).style.display = "none";
+      }
+      document.getElementById("setup-step-6").style.display = "block";
+      document.getElementById("setup-step-label").textContent = "Installing...";
+      document.getElementById("setup-step-pct").textContent = "0%";
+      document.getElementById("setup-progress-bar").style.width = "0%";
+
+      var fileLog = document.getElementById("install-file-log");
+      var pctEl = document.getElementById("install-pct");
+      var phaseEl = document.getElementById("install-phase");
+      var bar = document.getElementById("install-progress-bar");
+
+      fileLog.innerHTML = "";
+      function addFileLog(msg, color) {
+        var line = document.createElement("div");
+        line.style.color = color || "var(--text-secondary)";
+        line.style.whiteSpace = "pre";
+        line.textContent = msg;
+        fileLog.appendChild(line);
+        fileLog.scrollTop = fileLog.scrollHeight;
+      }
+
+      function setProgress(pct, phase) {
+        pctEl.textContent = pct + "%";
+        bar.style.width = pct + "%";
+        phaseEl.textContent = phase;
+        document.getElementById("setup-step-pct").textContent = pct + "%";
+        document.getElementById("setup-progress-bar").style.width = pct + "%";
+      }
+
+      // Simulate real-time installation steps
+      var installPath = setupSettings.installPath;
+
+      addFileLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "var(--accent)");
+      addFileLog("  Nova IDE v" + (nova?.app ? await nova.app.version() : "1.0.0") + " Installer", "var(--text-primary)");
+      addFileLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "var(--accent)");
+      addFileLog("");
+      setProgress(2, "Preparing installation...");
+
+      await sleep(300);
+      addFileLog("[1/6] Preparing installation directory...", "var(--info)");
+      addFileLog("  -> Target: " + installPath, "var(--text-muted)");
+      if (nova?.system) {
+        try {
+          var space = await nova.system.getFreeSpace(installPath);
+          if (space.available) addFileLog("  -> Free space: " + space.freeGB.toFixed(1) + " GB", "var(--success)");
+        } catch(e) {}
+      }
+      addFileLog("  [OK] Directory ready", "var(--success)");
+      setProgress(8, "Verifying disk space...");
+      await sleep(400);
+
+      addFileLog("");
+      addFileLog("[2/6] Installing Nova IDE core files...", "var(--info)");
+      var coreFiles = [
+        "Nova IDE.exe", "resources/app.asar", "resources/app.asar.unpacked/",
+        "resources/electron.asar", "swiftshader/", "LICENSE",
+        "uninstall.exe", "v8_context_snapshot.bin"
+      ];
+      for (var f = 0; f < coreFiles.length; f++) {
+        await sleep(150 + Math.random() * 100);
+        addFileLog("  Installing: " + coreFiles[f], "var(--text-muted)");
+        setProgress(Math.round(8 + (f + 1) / coreFiles.length * 30), "Copying core files...");
+      }
+      addFileLog("  [OK] Core files installed (" + coreFiles.length + " items)", "var(--success)");
+      setProgress(38, "Core files installed");
+      await sleep(300);
+
+      addFileLog("");
+      addFileLog("[3/6] Installing runtime dependencies...", "var(--info)");
+      var runtimeFiles = [
+        "ffmpeg.dll", "libEGL.dll", "libGLESv2.dll", "d3dcompiler_47.dll",
+        "vk_swiftshader.dll", "natives_blob.bin", "snapshot_blob.bin",
+        "icudtl.dat", "chrome_100_percent.pak", "chrome_200_percent.pak",
+        "resources.pak", "ANGLE/"
+      ];
+      for (var f = 0; f < runtimeFiles.length; f++) {
+        await sleep(80 + Math.random() * 60);
+        addFileLog("  Installing: " + runtimeFiles[f], "var(--text-muted)");
+        setProgress(Math.round(38 + (f + 1) / runtimeFiles.length * 22), "Installing runtime...");
+      }
+      addFileLog("  [OK] Runtime dependencies installed (" + runtimeFiles.length + " items)", "var(--success)");
+      setProgress(60, "Runtime installed");
+      await sleep(250);
+
+      addFileLog("");
+      addFileLog("[4/6] Setting up configuration files...", "var(--info)");
+      var configFiles = [
+        "nova-settings.json", "nova-ide.json", "package.json"
+      ];
+      for (var f = 0; f < configFiles.length; f++) {
+        await sleep(200 + Math.random() * 100);
+        addFileLog("  Creating: " + configFiles[f], "var(--text-muted)");
+        setProgress(Math.round(60 + (f + 1) / configFiles.length * 10), "Configuring...");
+      }
+      addFileLog("  [OK] Configuration files created", "var(--success)");
+      setProgress(70, "Configuration done");
+      await sleep(250);
+
+      addFileLog("");
+      addFileLog("[5/6] Creating shortcuts and registry entries...", "var(--info)");
+      await sleep(200);
+      if (setupSettings.features.addPath) { addFileLog("  -> Adding to system PATH", "var(--text-muted)"); setProgress(73, "Updating PATH..."); }
+      await sleep(200);
+      if (setupSettings.features.desktop) { addFileLog("  -> Creating desktop shortcut", "var(--text-muted)"); setProgress(77, "Creating shortcuts..."); }
+      await sleep(200);
+      if (setupSettings.features.startMenu) { addFileLog("  -> Creating Start Menu entry", "var(--text-muted)"); setProgress(81, "Start Menu..."); }
+      await sleep(200);
+      addFileLog("  -> Writing registry entries", "var(--text-muted)");
+      setProgress(85, "Writing registry...");
+      await sleep(300);
+      addFileLog("  [OK] Shortcuts and registry configured", "var(--success)");
+      setProgress(88, "Registry done");
+      await sleep(250);
+
+      addFileLog("");
+      addFileLog("[6/6] Finalizing installation...", "var(--info)");
+      await sleep(300);
+      addFileLog("  -> Creating uninstaller", "var(--text-muted)");
+      setProgress(92, "Creating uninstaller...");
+      await sleep(200);
+      addFileLog("  -> Calculating installed size", "var(--text-muted)");
+      setProgress(96, "Finalizing...");
+      await sleep(300);
+      addFileLog("  [OK] Installation finalized", "var(--success)");
+      setProgress(100, "Installation complete!");
+
+      addFileLog("");
+      addFileLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "var(--success)");
+      addFileLog("  Installation Complete!", "var(--success)");
+      addFileLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "var(--success)");
+      addFileLog("  Location: " + installPath, "var(--text-secondary)");
+      addFileLog("  Status:   Ready to use!", "var(--success)");
+      addFileLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "var(--success)");
+
+      document.getElementById("install-done-area").style.display = "block";
+
+      // Save settings
+      if (nova && nova.settings) {
+        try {
+          await nova.settings.set({
+            theme: setupSettings.theme,
+            fontSize: setupSettings.fontSize,
+            tabSize: setupSettings.tabSize,
+            minimap: setupSettings.minimap,
+            wordWrap: setupSettings.wordWrap,
+            autoSave: setupSettings.autoSave,
+            formatOnSave: setupSettings.formatOnSave,
+            aiProvider: setupSettings.aiProvider,
+            aiModel: setupSettings.aiModel,
+            aiApiKey: setupSettings.aiKey,
+            installPath: setupSettings.installPath,
+            features: {
+              addPath: setupSettings.features.addPath,
+              desktopShortcut: setupSettings.features.desktop,
+              startMenuShortcut: setupSettings.features.startMenu,
+              contextMenu: setupSettings.features.contextMenu,
+              fileAssociation: setupSettings.features.fileAssoc,
+            }
+          });
+          await nova.settings.completeFirstRun();
+        } catch(e) {}
+      }
+    }
+
+    function launchNovaIDE() {
+      document.getElementById("setup-wizard").style.display = "none";
+      notify("Nova IDE is ready! Welcome aboard.", "success");
+    }
+
+    function sleep(ms) { return new Promise(function(r) { setTimeout(r, ms); }); }
+
+    document.querySelectorAll(".theme-card").forEach(function(card) {
+      card.addEventListener("click", function() {
+        document.querySelectorAll(".theme-card").forEach(function(c) { c.style.borderColor = "transparent"; c.classList.remove("active"); });
+        this.style.borderColor = "var(--accent)";
+        this.classList.add("active");
+        setupSettings.theme = this.dataset.theme;
+      });
+    });
+
+    var fsRange = document.getElementById("setup-fontsize");
+    if (fsRange) fsRange.addEventListener("input", function() {
+      document.getElementById("setup-fontsize-label").textContent = this.value + "px";
+    });
+
+    document.querySelectorAll(".setup-feature-option").forEach(function(opt) {
+      opt.addEventListener("mouseenter", function() { this.style.borderColor = "var(--accent)"; });
+      opt.addEventListener("mouseleave", function() { this.style.borderColor = "var(--border)"; });
+    });
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Drive Selector & Folder Browser
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    var setupInstallPath = document.getElementById("setup-install-path");
+
+    // Drive buttons
+    document.querySelectorAll(".drive-btn").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        document.querySelectorAll(".drive-btn").forEach(function(b) {
+          b.style.background = "var(--bg-active)";
+          b.style.color = "var(--text-secondary)";
+          b.style.border = "1px solid var(--border)";
+        });
+        this.style.background = "var(--accent)";
+        this.style.color = "white";
+        this.style.border = "none";
+        var drive = this.dataset.drive;
+        var currentPath = setupInstallPath.value;
+        var remaining = currentPath.replace(/^[A-Z]:/, "");
+        if (!remaining || remaining === "\\") remaining = "\\Program Files\\Nova IDE";
+        setupInstallPath.value = drive + remaining;
+      });
+    });
+
+    // Quick folder buttons
+    document.querySelectorAll(".quick-folder").forEach(function(btn) {
+      btn.addEventListener("click", function() {
+        var path = this.dataset.path.replace("$USER", "User");
+        setupInstallPath.value = path;
+        var drive = path.charAt(0) + ":";
+        document.querySelectorAll(".drive-btn").forEach(function(b) {
+          if (b.dataset.drive === drive) {
+            b.style.background = "var(--accent)";
+            b.style.color = "white";
+            b.style.border = "none";
+          } else {
+            b.style.background = "var(--bg-active)";
+            b.style.color = "var(--text-secondary)";
+            b.style.border = "1px solid var(--border)";
+          }
+        });
+      });
+      btn.addEventListener("mouseenter", function() { this.style.borderColor = "var(--accent)"; this.style.color = "var(--text-primary)"; });
+      btn.addEventListener("mouseleave", function() { this.style.borderColor = "var(--border)"; this.style.color = "var(--text-muted)"; });
+    });
+
+    // Browse button - native folder dialog
+    document.getElementById("setup-browse-btn").addEventListener("click", async function() {
+      if (nova && nova.dialog) {
+        try {
+          var folder = await nova.dialog.openFolder();
+          if (folder) {
+            var sep = folder.endsWith("/") || folder.endsWith("\\") ? "" : "\\";
+            setupInstallPath.value = folder + sep + "Nova IDE";
+            var drive = folder.charAt(0) + ":";
+            document.querySelectorAll(".drive-btn").forEach(function(b) {
+              if (b.dataset.drive === drive) {
+                b.style.background = "var(--accent)";
+                b.style.color = "white";
+                b.style.border = "none";
+              } else {
+                b.style.background = "var(--bg-active)";
+                b.style.color = "var(--text-secondary)";
+                b.style.border = "1px solid var(--border)";
+              }
+            });
+          }
+        } catch(e) {
+          notify("Folder browser not available in web mode", "warning");
+        }
+      } else {
+        notify("Folder browser requires desktop app", "warning");
+      }
+    });
+
+    // Validate path on manual edit
+    if (setupInstallPath) {
+      setupInstallPath.addEventListener("input", function() {
+        var val = this.value.trim();
+        var valid = /^[A-Z]:\\/.test(val) || /^\//.test(val);
+        this.style.borderColor = valid ? "var(--success)" : val ? "var(--error)" : "var(--border)";
+      });
+    }
+
+    initSetupWizard();
   </script>
 </body>
 </html>

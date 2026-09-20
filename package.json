@@ -165,10 +165,17 @@
       "installerIcon": "electron/assets/icon.ico",
       "uninstallerIcon": "electron/assets/icon.ico",
       "installerHeaderIcon": "electron/assets/icon.ico",
+      "installerSidebar": "build/sidebar.bmp",
+      "uninstallerSidebar": "build/sidebar.bmp",
+      "license": "LICENSE",
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
-      "installerLanguages": [],
-      "language": "2052"
+      "warningsAsErrors": false,
+      "displayLanguageSelector": true,
+      "installerLanguages": ["2052", "1033", "1049", "1031", "1036", "1041", "1046", "1040"],
+      "language": "1033",
+      "unicode": true,
+      "includeCustomNsis": true
     },
     "mac": {
       "target": [
