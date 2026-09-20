@@ -10,6 +10,10 @@ const RELEASE = path.join(ROOT, "release");
 
 function getPackageConfig() {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf-8"));
+  const iconDir = path.join(ELECTRON_DIR, "assets");
+  const winIcon = fs.existsSync(path.join(iconDir, "icon.ico")) ? path.join(iconDir, "icon.ico") : undefined;
+  const macIcon = fs.existsSync(path.join(iconDir, "icon.icns")) ? path.join(iconDir, "icon.icns") : undefined;
+  const linuxIcon = fs.existsSync(path.join(iconDir, "icon.png")) ? path.join(iconDir, "icon.png") : undefined;
   return {
     appId: "com.nova.ide",
     productName: "Nova IDE",
@@ -29,19 +33,19 @@ function getPackageConfig() {
       "package.json",
     ],
     win: {
-      target: "nsis",
-      icon: path.join(ELECTRON_DIR, "assets", "icon.ico"),
+      target: "dir",
+      icon: winIcon,
       artifactName: "${productName}-${version}-win-${arch}.${ext}",
     },
     mac: {
-      target: "dmg",
-      icon: path.join(ELECTRON_DIR, "assets", "icon.icns"),
+      target: "dir",
+      icon: macIcon,
       artifactName: "${productName}-${version}-mac-${arch}.${ext}",
       category: "public.app-category.developer-tools",
     },
     linux: {
-      target: "AppImage",
-      icon: path.join(ELECTRON_DIR, "assets", "icon.png"),
+      target: "dir",
+      icon: linuxIcon,
       artifactName: "${productName}-${version}-linux-${arch}.${ext}",
       category: "Development",
     },
@@ -114,23 +118,23 @@ async function packageForWindows() {
   writePackageJson();
 
   const { packager } = require("@electron/packager");
-  const result = await packager({
+  const opts = {
     dir: path.join(RELEASE, "app"),
     out: RELEASE,
     name: config.productName,
     platform: "win32",
     arch: "x64",
-    electronVersion: "28.0.0",
     overwrite: true,
     asar: true,
-    icon: config.win.icon,
     win32metadata: {
       CompanyName: config.author,
       FileDescription: config.description,
       OriginalFilename: `${config.productName}.exe`,
       ProductName: config.productName,
     },
-  });
+  };
+  if (config.win.icon) opts.icon = config.win.icon;
+  const result = await packager(opts);
   console.log(`Windows build complete: ${result.join(", ")}`);
   return result;
 }
@@ -142,19 +146,19 @@ async function packageForMac() {
   writePackageJson();
 
   const { packager } = require("@electron/packager");
-  const result = await packager({
+  const opts = {
     dir: path.join(RELEASE, "app"),
     out: RELEASE,
     name: config.productName,
     platform: "darwin",
     arch: "universal",
-    electronVersion: "28.0.0",
     overwrite: true,
     asar: true,
-    icon: config.mac.icon,
     appBundleId: config.appId,
     appCategoryType: "public.app-category.developer-tools",
-  });
+  };
+  if (config.mac.icon) opts.icon = config.mac.icon;
+  const result = await packager(opts);
   console.log(`macOS build complete: ${result.join(", ")}`);
   return result;
 }
@@ -166,17 +170,17 @@ async function packageForLinux() {
   writePackageJson();
 
   const { packager } = require("@electron/packager");
-  const result = await packager({
+  const opts = {
     dir: path.join(RELEASE, "app"),
     out: RELEASE,
     name: config.productName,
     platform: "linux",
     arch: "x64",
-    electronVersion: "28.0.0",
     overwrite: true,
     asar: true,
-    icon: config.linux.icon,
-  });
+  };
+  if (config.linux.icon) opts.icon = config.linux.icon;
+  const result = await packager(opts);
   console.log(`Linux build complete: ${result.join(", ")}`);
   return result;
 }
