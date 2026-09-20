@@ -1,7 +1,7 @@
-import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, shell, dialog } from "electron";
 import * as path from "path";
 import * as fs from "fs/promises";
-import { existsSync, statSync } from "fs";
+import { existsSync, statSync, readFileSync } from "fs";
 import { exec } from "child_process";
 import { promisify } from "util";
 
@@ -262,6 +262,129 @@ ipcMain.handle("terminal:execute", async (_event, command: string, cwd?: string)
     timeout: 30_000,
   });
   return { stdout, stderr };
+});
+
+// ─── IPC Handlers: Chat (AI) ────────────────────────────────────────────────
+
+const chatHistory: Array<{ role: string; content: string }> = [];
+
+ipcMain.handle("chat:send", async (_event, message: string, context?: { filePath?: string; code?: string; language?: string }) => {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || "";
+  const provider = process.env.AI_PROVIDER || (process.env.ANTHROPIC_API_KEY ? "anthropic" : "openai");
+  const model = process.env.AI_MODEL || "gpt-4o-mini";
+
+  const systemPrompt = `You are Nova AI, an expert coding assistant inside the Nova Sub-Agent IDE. You help users with coding, debugging, explaining code, writing functions, and software engineering tasks. Be concise and helpful. Use markdown for code blocks.`;
+
+  const userMsg = context?.code
+    ? `${message}\n\n\`\`\`${context.language || ""}\n${context.code}\n\`\`\`\nFile: ${context.filePath || "unknown"}`
+    : message;
+
+  chatHistory.push({ role: "user", content: userMsg });
+  if (chatHistory.length > 50) chatHistory.splice(0, chatHistory.length - 50);
+
+  if (!apiKey) {
+    const reply = `[Nova AI - Offline Mode]\n\nNo AI API key configured.\n\nTo enable AI responses, set one of these environment variables:\n- OPENAI_API_KEY (for OpenAI GPT models)\n- ANTHROPIC_API_KEY (for Claude models)\n\nYou can also set:\n- AI_PROVIDER: "openai" | "anthropic" | "google" | "local"\n- AI_MODEL: model name (e.g., "gpt-4o-mini", "claude-3-5-haiku-20241022")\n\nCurrent message: ${message}`;
+    chatHistory.push({ role: "assistant", content: reply });
+    return { reply, tokens: 0 };
+  }
+
+  try {
+    const messages = [
+      { role: "system", content: systemPrompt },
+      ...chatHistory.slice(-20),
+    ];
+
+    let url = "";
+    let headers: Record<string, string> = { "Content-Type": "application/json" };
+    let body: any;
+
+    if (provider === "anthropic") {
+      url = "https://api.anthropic.com/v1/messages";
+      headers["x-api-key"] = apiKey;
+      headers["anthropic-version"] = "2023-06-01";
+      const systemMsg = messages.find(m => m.role === "system");
+      const otherMsgs = messages.filter(m => m.role !== "system");
+      body = {
+        model: model,
+        max_tokens: 4096,
+        system: systemMsg?.content || "",
+        messages: otherMsgs.map(m => ({ role: m.role === "assistant" ? "assistant" : "user", content: m.content })),
+      };
+    } else {
+      url = "https://api.openai.com/v1/chat/completions";
+      headers["Authorization"] = `Bearer ${apiKey}`;
+      body = { model, messages, max_tokens: 4096, temperature: 0.7 };
+    }
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`API error ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json() as any;
+    let reply = "";
+    let tokens = 0;
+
+    if (provider === "anthropic") {
+      reply = data.content?.[0]?.text || "No response";
+      tokens = (data.usage?.input_tokens || 0) + (data.usage?.output_tokens || 0);
+    } else {
+      reply = data.choices?.[0]?.message?.content || "No response";
+      tokens = data.usage?.total_tokens || 0;
+    }
+
+    chatHistory.push({ role: "assistant", content: reply });
+    return { reply, tokens };
+  } catch (err: any) {
+    return { reply: `Error: ${err.message}`, tokens: 0 };
+  }
+});
+
+// ─── IPC Handlers: Dialog ────────────────────────────────────────────────────
+
+ipcMain.handle("dialog:openFile", async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return null;
+  const result = await dialog.showOpenDialog(win, {
+    properties: ["openFile"],
+    filters: [
+      { name: "All Files", extensions: ["*"] },
+      { name: "JavaScript", extensions: ["js", "jsx", "ts", "tsx"] },
+      { name: "Python", extensions: ["py"] },
+      { name: "HTML", extensions: ["html", "htm"] },
+      { name: "CSS", extensions: ["css", "scss", "less"] },
+      { name: "JSON", extensions: ["json"] },
+      { name: "Markdown", extensions: ["md"] },
+      { name: "Rust", extensions: ["rs"] },
+      { name: "Go", extensions: ["go"] },
+    ],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  const filePath = result.filePaths[0];
+  const content = await fs.readFile(filePath, "utf-8");
+  return { filePath, content };
+});
+
+ipcMain.handle("dialog:openFolder", async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return null;
+  const result = await dialog.showOpenDialog(win, {
+    properties: ["openDirectory"],
+  });
+  if (result.canceled || !result.filePaths[0]) return null;
+  return result.filePaths[0];
+});
+
+ipcMain.handle("dialog:saveFile", async (_event, filePath: string, content: string) => {
+  await fs.writeFile(filePath, content, "utf-8");
+  return true;
 });
 
 // ─── IPC Handlers: App Info ───────────────────────────────────────────────────

@@ -30,6 +30,14 @@ export interface NovaAPI {
   terminal: {
     execute(command: string, cwd?: string): Promise<{ stdout: string; stderr: string }>;
   };
+  chat: {
+    send(message: string, context?: { filePath?: string; code?: string; language?: string }): Promise<{ reply: string; tokens?: number }>;
+  };
+  dialog: {
+    openFile(): Promise<{ filePath: string; content: string } | null>;
+    openFolder(): Promise<string | null>;
+    saveFile(filePath: string, content: string): Promise<boolean>;
+  };
   app: {
     version(): Promise<string>;
     path(name: string): Promise<string>;
@@ -99,6 +107,18 @@ const novaAPI: NovaAPI = {
   terminal: {
     execute: wrapInvoke((command: string, cwd?: string) =>
       ipcRenderer.invoke("terminal:execute", command, cwd)
+    ),
+  },
+  chat: {
+    send: wrapInvoke((message: string, context?: { filePath?: string; code?: string; language?: string }) =>
+      ipcRenderer.invoke("chat:send", message, context)
+    ),
+  },
+  dialog: {
+    openFile: wrapInvoke(() => ipcRenderer.invoke("dialog:openFile")),
+    openFolder: wrapInvoke(() => ipcRenderer.invoke("dialog:openFolder")),
+    saveFile: wrapInvoke((filePath: string, content: string) =>
+      ipcRenderer.invoke("dialog:saveFile", filePath, content)
     ),
   },
   app: {

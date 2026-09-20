@@ -10,7 +10,6 @@
 </head>
 <body>
   <div id="app">
-    <!-- Title Bar (Electron) / Top Bar (Web) -->
     <header id="titlebar">
       <div class="titlebar-drag-region">
         <span class="titlebar-logo">Nova</span>
@@ -23,9 +22,7 @@
       </div>
     </header>
 
-    <!-- Main Layout -->
     <div id="workspace">
-      <!-- Sidebar -->
       <aside id="sidebar">
         <div class="sidebar-tabs">
           <button class="sidebar-tab active" data-panel="explorer" title="Explorer">
@@ -43,6 +40,9 @@
           <button class="sidebar-tab" data-panel="agents" title="Sub-Agents">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 0-4 4v2a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
           </button>
+          <button class="sidebar-tab" data-panel="chat" title="AI Chat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
         </div>
         <div class="sidebar-content" id="sidebar-content">
           <!-- Explorer Panel -->
@@ -50,24 +50,17 @@
             <div class="panel-header">
               <span>Explorer</span>
               <div class="panel-actions">
-                <button class="icon-btn" title="New File"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
-                <button class="icon-btn" title="New Folder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
-                <button class="icon-btn" title="Collapse All"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
+                <button class="icon-btn" id="btn-new-file" title="New File"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
+                <button class="icon-btn" id="btn-new-folder" title="New Folder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+                <button class="icon-btn" id="btn-refresh-tree" title="Refresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
               </div>
-            </div>
-            <div class="panel-section">
-              <div class="section-header collapsed" data-section="open-editors">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                OPEN EDITORS
-              </div>
-              <div class="section-content" id="open-editors"></div>
             </div>
             <div class="panel-section">
               <div class="section-header" data-section="workspace">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
                 <span id="workspace-name">NOVA IDE</span>
               </div>
-              <div class="section-content" id="file-tree"></div>
+              <div class="section-content" id="file-tree" style="overflow:auto;max-height:calc(100vh - 200px);"></div>
             </div>
           </div>
 
@@ -77,14 +70,6 @@
             <div class="search-container">
               <div class="search-input-wrapper">
                 <input type="text" class="search-input" placeholder="Search across files..." id="search-input" />
-                <div class="search-options">
-                  <button class="icon-btn small" title="Match Case" id="search-case">Aa</button>
-                  <button class="icon-btn small" title="Whole Word" id="search-word">Ab</button>
-                  <button class="icon-btn small" title="Use Regex" id="search-regex">.*</button>
-                </div>
-              </div>
-              <div class="search-replace-wrapper" id="search-replace" style="display:none;">
-                <input type="text" class="search-input" placeholder="Replace..." id="replace-input" />
               </div>
               <div id="search-results" class="search-results"></div>
             </div>
@@ -108,38 +93,60 @@
             <div class="extensions-container" id="extensions-list"></div>
           </div>
 
-          <!-- Sub-Agents Panel -->
+          <!-- Agents Panel -->
           <div class="sidebar-panel" id="panel-agents">
             <div class="panel-header"><span>Sub-Agents</span></div>
             <div class="agents-container" id="agents-list">
-              <div class="agent-card">
-                <div class="agent-status online"></div>
-                <div class="agent-info">
-                  <div class="agent-name">Code Assistant</div>
-                  <div class="agent-desc">Ready</div>
+              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Code Assistant</div><div class="agent-desc">Ready</div></div></div>
+              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Debug Agent</div><div class="agent-desc">Ready</div></div></div>
+              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Git Agent</div><div class="agent-desc">Ready</div></div></div>
+              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Test Agent</div><div class="agent-desc">Ready</div></div></div>
+            </div>
+          </div>
+
+          <!-- Chat Panel -->
+          <div class="sidebar-panel" id="panel-chat">
+            <div class="chat-panel">
+              <div class="chat-messages" id="chat-messages">
+                <div class="chat-welcome">
+                  <div class="chat-welcome-icon">&#x1F916;</div>
+                  <div class="chat-welcome-title">Nova AI Assistant</div>
+                  <div class="chat-welcome-sub">Ask me anything about code</div>
+                  <div class="chat-suggestions">
+                    <button class="chat-suggestion" data-msg="Explain this code">Explain code</button>
+                    <button class="chat-suggestion" data-msg="Find and fix bugs">Fix bugs</button>
+                    <button class="chat-suggestion" data-msg="Write tests for this">Write tests</button>
+                    <button class="chat-suggestion" data-msg="Optimize this function">Optimize</button>
+                    <button class="chat-suggestion" data-msg="Refactor this code">Refactor</button>
+                    <button class="chat-suggestion" data-msg="Explain error message">Explain error</button>
+                  </div>
                 </div>
+              </div>
+              <div class="chat-context-bar" id="chat-context-bar" style="display:none;">
+                <span class="chat-context-label">Context:</span>
+                <span class="chat-context-file" id="chat-context-file"></span>
+                <button class="chat-context-clear" id="chat-context-clear" title="Clear context">&#x2715;</button>
+              </div>
+              <div class="chat-input-area">
+                <textarea class="chat-input" id="chat-input" placeholder="Ask Nova AI... (Ctrl+Enter to send)" rows="1"></textarea>
+                <button class="chat-send-btn" id="chat-send-btn" title="Send">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
               </div>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Resize Handle -->
       <div class="resize-handle vertical" id="sidebar-resize"></div>
 
-      <!-- Main Area -->
       <main id="main-area">
-        <!-- Editor Tabs -->
         <div id="editor-tabs">
           <div class="tabs-scroll">
             <div class="tabs-container" id="tabs-container"></div>
           </div>
-          <div class="tabs-actions">
-            <button class="icon-btn small" title="Split Editor"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/></svg></button>
-          </div>
         </div>
 
-        <!-- Editor Area -->
         <div id="editor-area">
           <div id="welcome-view" class="welcome-view">
             <div class="welcome-content">
@@ -163,24 +170,18 @@
                   <span>New Terminal</span>
                 </div>
               </div>
-              <div class="welcome-recent">
-                <h3>Recent</h3>
-                <div id="recent-files"></div>
-              </div>
             </div>
           </div>
-          <div id="editor-container" style="display:none;"></div>
+          <div id="editor-container" style="display:none;width:100%;height:100%;"></div>
         </div>
 
-        <!-- Resize Handle -->
         <div class="resize-handle horizontal" id="terminal-resize"></div>
 
-        <!-- Bottom Panel (Terminal / Output / Problems) -->
         <div id="bottom-panel">
           <div class="panel-tab-bar">
             <button class="panel-tab active" data-panel="terminal">Terminal</button>
             <button class="panel-tab" data-panel="output">Output</button>
-            <button class="panel-tab" data-panel="problems">Problems <span class="badge" id="problems-badge" style="display:none;">0</span></button>
+            <button class="panel-tab" data-panel="problems">Problems</button>
           </div>
           <div class="panel-content">
             <div class="panel-view active" id="view-terminal">
@@ -203,33 +204,26 @@
       </main>
     </div>
 
-    <!-- Status Bar -->
     <footer id="statusbar">
       <div class="status-left">
         <span class="status-item branch" id="status-branch">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg>
           main
         </span>
-        <span class="status-item" id="status-sync">0↓ 0↑</span>
+        <span class="status-item" id="status-sync">0&#x2193; 0&#x2191;</span>
       </div>
       <div class="status-right">
-        <span class="status-item" id="status-errors" title="Errors">0 <span class="status-icon error">✕</span></span>
-        <span class="status-item" id="status-warnings" title="Warnings">0 <span class="status-icon warning">⚠</span></span>
+        <span class="status-item" id="status-errors">0 <span class="status-icon error">&#x2715;</span></span>
+        <span class="status-item" id="status-warnings">0 <span class="status-icon warning">&#x26A0;</span></span>
         <span class="status-item" id="status-cursor">Ln 1, Col 1</span>
         <span class="status-item" id="status-encoding">UTF-8</span>
-        <span class="status-item" id="status-eol">LF</span>
         <span class="status-item" id="status-language">Plain Text</span>
-        <span class="status-item clickable" id="status-notifications" title="Notifications">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </span>
       </div>
     </footer>
   </div>
 
-  <!-- Context Menu -->
   <div id="context-menu" class="context-menu" style="display:none;"></div>
 
-  <!-- Modal Overlay -->
   <div id="modal-overlay" class="modal-overlay" style="display:none;">
     <div class="modal" id="modal">
       <div class="modal-header" id="modal-header"></div>
@@ -238,120 +232,511 @@
     </div>
   </div>
 
-  <!-- Notification Container -->
   <div id="notifications" class="notification-container"></div>
 
-  <!-- Monaco Editor Loader -->
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
-  <!-- React -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-
   <script>
-    // ─── Bootstrap ──────────────────────────────────────────────────────────
-    window.__NOVA_READY__ = false;
+    // ═══════════════════════════════════════════════════════════════════════════
+    // Nova IDE - Full Application Logic
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    // Monaco Editor Setup
-    require.config({
-      paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" },
-    });
+    var nova = window.nova;
+    var monacoEditor = null;
+    var currentFilePath = null;
+    var openFiles = new Map();
+    var fileTreeRoot = null;
+    var currentFolder = null;
+
+    // ─── Monaco Editor Init ────────────────────────────────────────────────
+    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
 
     require(["vs/editor/editor.main"], function () {
       window.monaco = monaco;
-      window.__NOVA_READY__ = true;
+
+      monaco.editor.defineTheme("nova-dark", {
+        base: "vs-dark",
+        inherit: true,
+        rules: [
+          { token: "comment", foreground: "6A9955", fontStyle: "italic" },
+          { token: "keyword", foreground: "C586C0" },
+          { token: "string", foreground: "CE9178" },
+          { token: "number", foreground: "B5CEA8" },
+          { token: "type", foreground: "4EC9B0" },
+          { token: "function", foreground: "DCDCAA" },
+          { token: "variable", foreground: "9CDCFE" },
+          { token: "operator", foreground: "D4D4D4" },
+          { token: "tag", foreground: "569CD6" },
+          { token: "attribute.name", foreground: "9CDCFE" },
+          { token: "attribute.value", foreground: "CE9178" },
+        ],
+        colors: {
+          "editor.background": "#0D1117",
+          "editor.foreground": "#C9D1D9",
+          "editor.lineHighlightBackground": "#161B22",
+          "editor.selectionBackground": "#264F78",
+          "editorCursor.foreground": "#58A6FF",
+          "editorLineNumber.foreground": "#484F58",
+          "editorLineNumber.activeForeground": "#C9D1D9",
+          "editorIndentGuide.background": "#21262D",
+          "editorWidget.background": "#161B22",
+          "editorWidget.border": "#30363D",
+          "editorSuggestWidget.background": "#161B22",
+          "editorSuggestWidget.border": "#30363D",
+          "input.background": "#0D1117",
+          "input.border": "#30363D",
+          "focusBorder": "#1F6FEB",
+        },
+      });
+
+      monaco.editor.setTheme("nova-dark");
       document.dispatchEvent(new Event("nova:ready"));
     });
 
-    // ─── Panel Switching ──────────────────────────────────────────────────
-    document.querySelectorAll(".sidebar-tab").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        document.querySelectorAll(".sidebar-tab").forEach(function (t) { t.classList.remove("active"); });
-        document.querySelectorAll(".sidebar-panel").forEach(function (p) { p.classList.remove("active"); });
-        tab.classList.add("active");
-        var panelId = "panel-" + tab.getAttribute("data-panel");
-        var panel = document.getElementById(panelId);
-        if (panel) panel.classList.add("active");
+    function createMonacoEditor(container) {
+      if (monacoEditor) { monacoEditor.dispose(); }
+      container.innerHTML = "";
+      container.style.display = "block";
+      document.getElementById("welcome-view").style.display = "none";
+
+      monacoEditor = monaco.editor.create(container, {
+        value: "",
+        language: "plaintext",
+        theme: "nova-dark",
+        fontSize: 14,
+        fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace",
+        minimap: { enabled: true },
+        automaticLayout: true,
+        scrollBeyondLastLine: false,
+        renderWhitespace: "selection",
+        bracketPairColorization: { enabled: true },
+        guides: { bracketPairs: true },
+        smoothScrolling: true,
+        cursorBlinking: "smooth",
+        cursorSmoothCaretAnimation: "on",
+        padding: { top: 8, bottom: 8 },
+        lineNumbers: "on",
+        folding: true,
+        contextmenu: true,
+        mouseWheelZoom: true,
+        suggest: {
+          showMethods: true, showFunctions: true, showConstructors: true,
+          showFields: true, showVariables: true, showClasses: true,
+          showProperties: true, showKeywords: true, showSnippets: true,
+        },
       });
-    });
 
-    // ─── Bottom Panel Tabs ────────────────────────────────────────────────
-    document.querySelectorAll(".panel-tab").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        document.querySelectorAll(".panel-tab").forEach(function (t) { t.classList.remove("active"); });
-        document.querySelectorAll(".panel-view").forEach(function (v) { v.classList.remove("active"); });
-        tab.classList.add("active");
-        var viewId = "view-" + tab.getAttribute("data-panel");
-        var view = document.getElementById(viewId);
-        if (view) view.classList.add("active");
+      monacoEditor.onDidChangeCursorSelection(function () {
+        var pos = monacoEditor.getPosition();
+        if (pos) {
+          document.getElementById("status-cursor").textContent = "Ln " + pos.lineNumber + ", Col " + pos.column;
+        }
       });
-    });
 
-    // ─── Section Collapse Toggle ──────────────────────────────────────────
-    document.querySelectorAll(".section-header").forEach(function (header) {
-      header.addEventListener("click", function () {
-        header.classList.toggle("collapsed");
+      monacoEditor.onDidChangeModelContent(function () {
+        if (currentFilePath && openFiles.has(currentFilePath)) {
+          var tab = openFiles.get(currentFilePath);
+          tab.modified = true;
+          renderTabs();
+        }
       });
-    });
+    }
 
-    // ─── Search Toggle Replace ────────────────────────────────────────────
-    document.getElementById("search-input").addEventListener("focus", function () {
-      document.getElementById("search-replace").style.display = "block";
-    });
+    // ─── File Language Detection ────────────────────────────────────────────
+    function getLanguage(filePath) {
+      var ext = filePath.split(".").pop().toLowerCase();
+      var map = {
+        ts: "typescript", tsx: "typescriptreact", js: "javascript", jsx: "javascriptreact",
+        py: "python", rs: "rust", go: "go", java: "java", cpp: "cpp", c: "c",
+        cs: "csharp", rb: "ruby", php: "php", swift: "swift", kt: "kotlin",
+        html: "html", htm: "html", css: "css", scss: "scss", less: "less",
+        json: "json", yaml: "yaml", yml: "yaml", md: "markdown", sql: "sql",
+        sh: "shell", bash: "shell", ps1: "powershell", xml: "xml", svg: "xml",
+        dockerfile: "dockerfile", toml: "ini", ini: "ini", txt: "plaintext",
+      };
+      return map[ext] || "plaintext";
+    }
 
-    // ─── Terminal Input ───────────────────────────────────────────────────
-    var termInput = document.getElementById("terminal-input");
+    function getLanguageName(filePath) {
+      var ext = filePath.split(".").pop().toLowerCase();
+      var map = {
+        ts: "TypeScript", tsx: "TypeScript React", js: "JavaScript", jsx: "JavaScript React",
+        py: "Python", rs: "Rust", go: "Go", java: "Java", cpp: "C++", c: "C",
+        html: "HTML", css: "CSS", json: "JSON", md: "Markdown", yaml: "YAML",
+      };
+      return map[ext] || ext.toUpperCase();
+    }
+
+    function getFileName(filePath) {
+      return filePath.split(/[/\\]/).pop();
+    }
+
+    function getFileIcon(name) {
+      var ext = name.split(".").pop().toLowerCase();
+      var icons = {
+        ts: { i: "TS", c: "#3178C6" }, tsx: { i: "TX", c: "#3178C6" },
+        js: { i: "JS", c: "#F7DF1E" }, jsx: { i: "JX", c: "#F7DF1E" },
+        json: { i: "{}", c: "#CB3837" }, md: { i: "M", c: "#519ABA" },
+        css: { i: "#", c: "#563D7C" }, html: { i: "<>", c: "#E44D26" },
+        py: { i: "Py", c: "#3776AB" }, rs: { i: "Rs", c: "#DEA584" },
+        go: { i: "Go", c: "#00ADD8" }, java: { i: "J", c: "#ED8B00" },
+        gitignore: { i: "G", c: "#F05032" }, sh: { i: "$", c: "#4EAA25" },
+      };
+      if (name === "gitignore") ext = "gitignore";
+      return icons[ext] || { i: name.charAt(0).toUpperCase(), c: "#89A0C6" };
+    }
+
+    // ─── Open File ──────────────────────────────────────────────────────────
+    async function openFile(filePath) {
+      if (!nova || !nova.fs) { notify("File system not available (web mode)", "warning"); return; }
+      try {
+        var content = await nova.fs.readFile(filePath);
+        openFiles.set(filePath, { content: content, modified: false });
+        currentFilePath = filePath;
+        var container = document.getElementById("editor-container");
+        createMonacoEditor(container);
+        monacoEditor.setValue(content);
+        monacoEditor.setModelLanguage(monaco.editor.createModel(content, getLanguage(filePath)));
+        renderTabs();
+        document.getElementById("status-language").textContent = getLanguageName(filePath);
+        document.getElementById("status-encoding").textContent = "UTF-8";
+      } catch (err) {
+        notify("Failed to open file: " + err.message, "error");
+      }
+    }
+
+    async function saveCurrentFile() {
+      if (!currentFilePath || !monacoEditor || !nova || !nova.fs) return;
+      var content = monacoEditor.getValue();
+      try {
+        await nova.fs.writeFile(currentFilePath, content);
+        var tab = openFiles.get(currentFilePath);
+        if (tab) { tab.content = content; tab.modified = false; }
+        renderTabs();
+        notify("File saved: " + getFileName(currentFilePath), "success");
+      } catch (err) {
+        notify("Failed to save: " + err.message, "error");
+      }
+    }
+
+    // ─── Tabs ───────────────────────────────────────────────────────────────
+    function renderTabs() {
+      var container = document.getElementById("tabs-container");
+      container.innerHTML = "";
+      openFiles.forEach(function (tab, filePath) {
+        var btn = document.createElement("button");
+        btn.className = "editor-tab" + (filePath === currentFilePath ? " active" : "");
+        var name = getFileName(filePath);
+        var icon = getFileIcon(name);
+        btn.innerHTML = '<span style="color:' + icon.c + ';font-weight:700;font-size:10px;">' + icon.i + '</span> ' + name + (tab.modified ? ' <span class="modified-dot"></span>' : '') + ' <button class="close-btn" data-path="' + filePath + '">&times;</button>';
+        btn.addEventListener("click", function (e) {
+          if (e.target.classList.contains("close-btn")) {
+            closeTab(e.target.dataset.path);
+            return;
+          }
+          switchTab(filePath);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function switchTab(filePath) {
+      if (monacoEditor && currentFilePath && openFiles.has(currentFilePath)) {
+        openFiles.get(currentFilePath).content = monacoEditor.getValue();
+      }
+      currentFilePath = filePath;
+      var tab = openFiles.get(filePath);
+      if (tab && monacoEditor) {
+        monacoEditor.setValue(tab.content);
+        monacoEditor.setModelLanguage(monaco.editor.createModel(tab.content, getLanguage(filePath)));
+        document.getElementById("status-language").textContent = getLanguageName(filePath);
+      }
+      renderTabs();
+    }
+
+    function closeTab(filePath) {
+      var tab = openFiles.get(filePath);
+      if (tab && tab.modified) {
+        if (!confirm("Save changes to " + getFileName(filePath) + "?")) {
+          openFiles.delete(filePath);
+          if (currentFilePath === filePath) {
+            var keys = Array.from(openFiles.keys());
+            if (keys.length > 0) switchTab(keys[0]);
+            else {
+              currentFilePath = null;
+              document.getElementById("editor-container").style.display = "none";
+              document.getElementById("welcome-view").style.display = "";
+            }
+          }
+          renderTabs();
+          return;
+        }
+      }
+      openFiles.delete(filePath);
+      if (currentFilePath === filePath) {
+        var keys = Array.from(openFiles.keys());
+        if (keys.length > 0) switchTab(keys[0]);
+        else {
+          currentFilePath = null;
+          if (monacoEditor) { monacoEditor.dispose(); monacoEditor = null; }
+          document.getElementById("editor-container").style.display = "none";
+          document.getElementById("welcome-view").style.display = "";
+        }
+      }
+      renderTabs();
+    }
+
+    // ─── File Explorer ──────────────────────────────────────────────────────
+    async function loadFileTree(dirPath, container, depth) {
+      if (!nova || !nova.fs) return;
+      depth = depth || 0;
+      try {
+        var entries = await nova.fs.readdir(dirPath);
+        entries.sort(function (a, b) {
+          if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+        for (var i = 0; i < entries.length; i++) {
+          var entry = entries[i];
+          if (entry.name.startsWith(".") && entry.name !== ".gitignore") continue;
+          if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
+          var fullPath = dirPath + (dirPath.endsWith("/") || dirPath.endsWith("\\") ? "" : "/") + entry.name;
+          var item = document.createElement("div");
+          item.className = "file-tree-item";
+          item.style.paddingLeft = (12 + depth * 16) + "px";
+          item.dataset.path = fullPath;
+          item.dataset.type = entry.isDirectory ? "folder" : "file";
+
+          if (entry.isDirectory) {
+            var icon = getFileIcon(entry.name);
+            item.innerHTML = '<span class="tree-arrow">&#x25B6;</span> <span style="color:' + icon.c + ';font-weight:700;font-size:11px;">' + icon.i + '</span> <span class="name">' + entry.name + '</span>';
+            var childContainer = document.createElement("div");
+            childContainer.className = "tree-children";
+            childContainer.style.display = "none";
+            var expanded = false;
+
+            item.addEventListener("click", (function (p, c, el) {
+              return function (e) {
+                e.stopPropagation();
+                var arrow = el.querySelector(".tree-arrow");
+                if (c.style.display === "none") {
+                  c.style.display = "block";
+                  arrow.innerHTML = "&#x25BC;";
+                  if (c.children.length === 0) loadFileTree(p, c, 0);
+                } else {
+                  c.style.display = "none";
+                  arrow.innerHTML = "&#x25B6;";
+                }
+              };
+            })(fullPath, childContainer, item));
+
+            container.appendChild(item);
+            container.appendChild(childContainer);
+          } else {
+            var icon = getFileIcon(entry.name);
+            item.innerHTML = '<span style="width:14px;"></span> <span style="color:' + icon.c + ';font-weight:700;font-size:11px;">' + icon.i + '</span> <span class="name">' + entry.name + '</span>';
+            item.addEventListener("click", (function (p) {
+              return function (e) {
+                e.stopPropagation();
+                document.querySelectorAll(".file-tree-item").forEach(function (el) { el.classList.remove("active"); });
+                this.classList.add("active");
+                openFile(p);
+              };
+            })(fullPath));
+            container.appendChild(item);
+          }
+        }
+      } catch (err) {
+        var errDiv = document.createElement("div");
+        errDiv.style.cssText = "padding:8px;color:#f38ba8;font-size:11px;";
+        errDiv.textContent = "Cannot read directory";
+        container.appendChild(errDiv);
+      }
+    }
+
+    async function openFolder(folderPath) {
+      if (!nova || !nova.fs) { notify("File system not available", "warning"); return; }
+      currentFolder = folderPath;
+      var treeEl = document.getElementById("file-tree");
+      treeEl.innerHTML = "";
+      var folderName = folderPath.split(/[/\\]/).pop();
+      document.getElementById("workspace-name").textContent = folderName.toUpperCase();
+      await loadFileTree(folderPath, treeEl, 0);
+      notify("Opened folder: " + folderName, "success");
+    }
+
+    // ─── Terminal ───────────────────────────────────────────────────────────
     var termOutput = document.getElementById("terminal-output");
-    var commandHistory = [];
-    var historyIndex = -1;
+    var termInput = document.getElementById("terminal-input");
+    var cmdHistory = [];
+    var histIdx = -1;
 
-    termInput.addEventListener("keydown", function (e) {
+    function appendTerm(text, cls) {
+      var line = document.createElement("div");
+      line.className = "terminal-line " + (cls || "");
+      line.textContent = text;
+      termOutput.appendChild(line);
+      termOutput.scrollTop = termOutput.scrollHeight;
+    }
+
+    termInput.addEventListener("keydown", async function (e) {
       if (e.key === "Enter") {
         var cmd = termInput.value.trim();
         if (!cmd) return;
-        commandHistory.push(cmd);
-        historyIndex = commandHistory.length;
-        appendTerminalLine("❯ " + cmd, "terminal-command");
-        if (window.nova && window.nova.terminal) {
-          window.nova.terminal.execute(cmd).then(function (result) {
-            if (result.stdout) appendTerminalLine(result.stdout, "terminal-stdout");
-            if (result.stderr) appendTerminalLine(result.stderr, "terminal-stderr");
-          }).catch(function (err) {
-            appendTerminalLine(String(err), "terminal-stderr");
-          });
+        cmdHistory.push(cmd);
+        histIdx = cmdHistory.length;
+        appendTerm("\u276E " + cmd, "terminal-command");
+        if (nova && nova.terminal) {
+          try {
+            var result = await nova.terminal.execute(cmd, currentFolder || undefined);
+            if (result.stdout) appendTerm(result.stdout, "terminal-stdout");
+            if (result.stderr) appendTerm(result.stderr, "terminal-stderr");
+          } catch (err) {
+            appendTerm(String(err), "terminal-stderr");
+          }
         } else {
-          appendTerminalLine("Terminal not available (web mode)", "terminal-stderr");
+          appendTerm("Terminal not available (web mode)", "terminal-stderr");
         }
         termInput.value = "";
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        if (historyIndex > 0) {
-          historyIndex--;
-          termInput.value = commandHistory[historyIndex];
-        }
+        if (histIdx > 0) { histIdx--; termInput.value = cmdHistory[histIdx]; }
       } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        if (historyIndex < commandHistory.length - 1) {
-          historyIndex++;
-          termInput.value = commandHistory[historyIndex];
-        } else {
-          historyIndex = commandHistory.length;
-          termInput.value = "";
-        }
+        if (histIdx < cmdHistory.length - 1) { histIdx++; termInput.value = cmdHistory[histIdx]; }
+        else { histIdx = cmdHistory.length; termInput.value = ""; }
       } else if (e.key === "l" && e.ctrlKey) {
         e.preventDefault();
         termOutput.innerHTML = "";
       }
     });
 
-    function appendTerminalLine(text, className) {
-      var line = document.createElement("div");
-      line.className = "terminal-line " + (className || "");
-      line.textContent = text;
-      termOutput.appendChild(line);
-      termOutput.scrollTop = termOutput.scrollHeight;
+    // ─── Chat ───────────────────────────────────────────────────────────────
+    var chatMessages = document.getElementById("chat-messages");
+    var chatInput = document.getElementById("chat-input");
+    var chatSendBtn = document.getElementById("chat-send-btn");
+    var chatContextFile = null;
+    var chatHistoryLocal = [];
+
+    function renderChatMessage(role, content) {
+      var msg = document.createElement("div");
+      msg.className = "chat-msg " + role;
+      var avatar = role === "user" ? "You" : "Nova";
+      var avatarClass = role === "user" ? "chat-avatar-user" : "chat-avatar-ai";
+      var html = '<div class="chat-msg-header"><span class="chat-avatar ' + avatarClass + '">' + avatar.charAt(0) + '</span><span class="chat-msg-name">' + avatar + '</span></div>';
+      html += '<div class="chat-msg-body">' + formatMarkdown(content) + '</div>';
+      msg.innerHTML = html;
+      chatMessages.appendChild(msg);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
-    // ─── Resize Handles ───────────────────────────────────────────────────
+    function formatMarkdown(text) {
+      var escaped = text
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/```(\w*)\n([\s\S]*?)```/g, function (m, lang, code) {
+          return '<div class="chat-code-block"><div class="chat-code-header"><span>' + (lang || 'code') + '</span><button onclick="navigator.clipboard.writeText(this.parentElement.nextElementSibling.textContent)">Copy</button></div><pre><code>' + code.trim() + '</code></pre></div>';
+        })
+        .replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g, '<em>$1</em>')
+        .replace(/^### (.+)$/gm, '<h4>$1</h4>')
+        .replace(/^## (.+)$/gm, '<h3>$1</h3>')
+        .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+        .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+      return '<div class="chat-markdown">' + escaped + '</div>';
+    }
+
+    async function sendChat() {
+      var msg = chatInput.value.trim();
+      if (!msg) return;
+
+      var welcome = chatMessages.querySelector(".chat-welcome");
+      if (welcome) welcome.remove();
+
+      renderChatMessage("user", msg);
+      chatHistoryLocal.push({ role: "user", content: msg });
+      chatInput.value = "";
+      chatInput.style.height = "auto";
+
+      var context = null;
+      if (chatContextFile && currentFilePath && monacoEditor) {
+        context = { filePath: currentFilePath, code: monacoEditor.getValue(), language: getLanguage(currentFilePath) };
+      }
+
+      var typingEl = document.createElement("div");
+      typingEl.className = "chat-msg assistant";
+      typingEl.innerHTML = '<div class="chat-msg-header"><span class="chat-avatar chat-avatar-ai">N</span><span class="chat-msg-name">Nova</span></div><div class="chat-msg-body"><div class="chat-typing"><span></span><span></span><span></span></div></div>';
+      chatMessages.appendChild(typingEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      try {
+        var result = await nova.chat.send(msg, context);
+        typingEl.remove();
+        renderChatMessage("assistant", result.reply);
+        chatHistoryLocal.push({ role: "assistant", content: result.reply });
+      } catch (err) {
+        typingEl.remove();
+        renderChatMessage("assistant", "Error: " + err.message);
+      }
+    }
+
+    chatSendBtn.addEventListener("click", sendChat);
+    chatInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendChat(); }
+    });
+    chatInput.addEventListener("input", function () {
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+
+    document.querySelectorAll(".chat-suggestion").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        chatInput.value = this.dataset.msg;
+        sendChat();
+      });
+    });
+
+    document.getElementById("chat-context-clear").addEventListener("click", function () {
+      chatContextFile = null;
+      document.getElementById("chat-context-bar").style.display = "none";
+    });
+
+    function setChatContext() {
+      if (currentFilePath) {
+        chatContextFile = currentFilePath;
+        document.getElementById("chat-context-file").textContent = getFileName(currentFilePath);
+        document.getElementById("chat-context-bar").style.display = "flex";
+      }
+    }
+
+    // ─── Sidebar Panel Switching ────────────────────────────────────────────
+    document.querySelectorAll(".sidebar-tab").forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        document.querySelectorAll(".sidebar-tab").forEach(function (t) { t.classList.remove("active"); });
+        document.querySelectorAll(".sidebar-panel").forEach(function (p) { p.classList.remove("active"); });
+        tab.classList.add("active");
+        var panel = document.getElementById("panel-" + tab.getAttribute("data-panel"));
+        if (panel) panel.classList.add("active");
+      });
+    });
+
+    // ─── Bottom Panel Tabs ──────────────────────────────────────────────────
+    document.querySelectorAll(".panel-tab").forEach(function (tab) {
+      tab.addEventListener("click", function () {
+        document.querySelectorAll(".panel-tab").forEach(function (t) { t.classList.remove("active"); });
+        document.querySelectorAll(".panel-view").forEach(function (v) { v.classList.remove("active"); });
+        tab.classList.add("active");
+        var view = document.getElementById("view-" + tab.getAttribute("data-panel"));
+        if (view) view.classList.add("active");
+      });
+    });
+
+    // ─── Section Collapse ───────────────────────────────────────────────────
+    document.querySelectorAll(".section-header").forEach(function (h) {
+      h.addEventListener("click", function () { h.classList.toggle("collapsed"); });
+    });
+
+    // ─── Resize Handles ─────────────────────────────────────────────────────
     (function () {
       var sidebarResize = document.getElementById("sidebar-resize");
       var sidebar = document.getElementById("sidebar");
@@ -359,115 +744,130 @@
       var bottomPanel = document.getElementById("bottom-panel");
       var dragging = null;
 
-      sidebarResize.addEventListener("mousedown", function (e) {
-        dragging = "sidebar";
-        document.body.style.cursor = "col-resize";
-        e.preventDefault();
-      });
-
-      termResize.addEventListener("mousedown", function (e) {
-        dragging = "terminal";
-        document.body.style.cursor = "row-resize";
-        e.preventDefault();
-      });
-
+      sidebarResize.addEventListener("mousedown", function (e) { dragging = "sidebar"; document.body.style.cursor = "col-resize"; e.preventDefault(); });
+      termResize.addEventListener("mousedown", function (e) { dragging = "terminal"; document.body.style.cursor = "row-resize"; e.preventDefault(); });
       document.addEventListener("mousemove", function (e) {
-        if (dragging === "sidebar") {
-          var w = Math.max(180, Math.min(500, e.clientX));
-          sidebar.style.width = w + "px";
-        } else if (dragging === "terminal") {
+        if (dragging === "sidebar") { sidebar.style.width = Math.max(180, Math.min(500, e.clientX)) + "px"; }
+        else if (dragging === "terminal") {
           var rect = bottomPanel.parentElement.getBoundingClientRect();
-          var h = Math.max(100, Math.min(500, rect.bottom - e.clientY));
-          bottomPanel.style.height = h + "px";
+          bottomPanel.style.height = Math.max(80, Math.min(500, rect.bottom - e.clientY)) + "px";
         }
       });
-
-      document.addEventListener("mouseup", function () {
-        dragging = null;
-        document.body.style.cursor = "";
-      });
+      document.addEventListener("mouseup", function () { dragging = null; document.body.style.cursor = ""; });
     })();
 
-    // ─── Context Menu ─────────────────────────────────────────────────────
-    var contextMenu = document.getElementById("context-menu");
-
-    document.addEventListener("contextmenu", function (e) {
-      if (e.target.closest("#terminal-container") || e.target.closest("#editor-container")) {
-        e.preventDefault();
-        var items = [];
-        if (e.target.closest("#terminal-container")) {
-          items = [
-            { label: "Copy", action: function () { document.execCommand("copy"); } },
-            { label: "Paste", action: function () { document.execCommand("paste"); } },
-            { label: "Clear", action: function () { termOutput.innerHTML = ""; } },
-          ];
-        } else {
-          items = [
-            { label: "Cut", action: function () { document.execCommand("cut"); } },
-            { label: "Copy", action: function () { document.execCommand("copy"); } },
-            { label: "Paste", action: function () { document.execCommand("paste"); } },
-            { type: "separator" },
-            { label: "Go to Definition" },
-            { label: "Find References" },
-            { label: "Rename Symbol" },
-          ];
-        }
-        showContextMenu(e.clientX, e.clientY, items);
-      }
-    });
-
-    document.addEventListener("click", function () {
-      contextMenu.style.display = "none";
-    });
-
-    function showContextMenu(x, y, items) {
-      contextMenu.innerHTML = "";
-      items.forEach(function (item) {
-        if (item.type === "separator") {
-          var sep = document.createElement("div");
-          sep.className = "context-menu-separator";
-          contextMenu.appendChild(sep);
-        } else {
-          var el = document.createElement("div");
-          el.className = "context-menu-item";
-          el.textContent = item.label;
-          if (item.action) el.addEventListener("click", item.action);
-          contextMenu.appendChild(el);
-        }
-      });
-      contextMenu.style.left = x + "px";
-      contextMenu.style.top = y + "px";
-      contextMenu.style.display = "block";
-    }
-
-    // ─── Keyboard Shortcuts ───────────────────────────────────────────────
+    // ─── Keyboard Shortcuts ─────────────────────────────────────────────────
     document.addEventListener("keydown", function (e) {
       var ctrl = e.ctrlKey || e.metaKey;
-      if (ctrl && e.key === "`") {
-        e.preventDefault();
-        document.querySelector('.panel-tab[data-panel="terminal"]').click();
-        termInput.focus();
-      }
-      if (ctrl && e.key === "b") {
-        e.preventDefault();
-        sidebar.style.display = sidebar.style.display === "none" ? "" : "none";
-      }
-      if (ctrl && e.key === "j") {
-        e.preventDefault();
-        bottomPanel.style.display = bottomPanel.style.display === "none" ? "" : "none";
-      }
+      if (ctrl && e.key === "s") { e.preventDefault(); saveCurrentFile(); }
+      if (ctrl && e.key === "o") { e.preventDefault(); openFileDialog(); }
+      if (ctrl && e.key === "n" && !e.shiftKey) { e.preventDefault(); newFile(); }
+      if (ctrl && e.key === "`") { e.preventDefault(); document.querySelector('.panel-tab[data-panel="terminal"]').click(); termInput.focus(); }
+      if (ctrl && e.key === "b") { e.preventDefault(); sidebar.style.display = sidebar.style.display === "none" ? "" : "none"; }
+      if (ctrl && e.key === "j") { e.preventDefault(); bottomPanel.style.display = bottomPanel.style.display === "none" ? "" : "none"; }
+      if (ctrl && e.shiftKey && e.key === "L") { e.preventDefault(); setChatContext(); document.querySelector('.sidebar-tab[data-panel="chat"]').click(); chatInput.focus(); }
+      if (e.key === "F12") { e.preventDefault(); }
     });
 
-    // ─── Title Bar Actions (Electron only) ────────────────────────────────
-    document.getElementById("btn-minimize")?.addEventListener("click", function () {
-      window.nova?.app?.minimize?.();
+    // ─── Dialogs ────────────────────────────────────────────────────────────
+    async function openFileDialog() {
+      if (nova && nova.dialog) {
+        var result = await nova.dialog.openFile();
+        if (result) {
+          openFiles.set(result.filePath, { content: result.content, modified: false });
+          currentFilePath = result.filePath;
+          var container = document.getElementById("editor-container");
+          createMonacoEditor(container);
+          monacoEditor.setValue(result.content);
+          monacoEditor.setModelLanguage(monaco.editor.createModel(result.content, getLanguage(result.filePath)));
+          renderTabs();
+          document.getElementById("status-language").textContent = getLanguageName(result.filePath);
+        }
+      } else {
+        notify("File dialog not available (web mode)", "warning");
+      }
+    }
+
+    async function openFolderDialog() {
+      if (nova && nova.dialog) {
+        var folder = await nova.dialog.openFolder();
+        if (folder) openFolder(folder);
+      } else {
+        notify("Folder dialog not available (web mode)", "warning");
+      }
+    }
+
+    async function newFile() {
+      var name = prompt("File name:");
+      if (!name) return;
+      if (currentFolder && nova && nova.fs) {
+        var fullPath = currentFolder + (currentFolder.endsWith("/") || currentFolder.endsWith("\\") ? "" : "/") + name;
+        await nova.fs.writeFile(fullPath, "");
+        openFiles.set(fullPath, { content: "", modified: false });
+        currentFilePath = fullPath;
+        var container = document.getElementById("editor-container");
+        createMonacoEditor(container);
+        monacoEditor.setModelLanguage(monaco.editor.createModel("", getLanguage(fullPath)));
+        renderTabs();
+        if (currentFolder) openFolder(currentFolder);
+      } else {
+        openFiles.set(name, { content: "", modified: false });
+        currentFilePath = name;
+        var container = document.getElementById("editor-container");
+        createMonacoEditor(container);
+        renderTabs();
+      }
+    }
+
+    // ─── Welcome Actions ────────────────────────────────────────────────────
+    document.getElementById("welcome-open-file").addEventListener("click", openFileDialog);
+    document.getElementById("welcome-open-folder").addEventListener("click", openFolderDialog);
+    document.getElementById("welcome-new-file").addEventListener("click", newFile);
+    document.getElementById("welcome-new-terminal").addEventListener("click", function () {
+      document.querySelector('.panel-tab[data-panel="terminal"]').click();
+      termInput.focus();
     });
-    document.getElementById("btn-maximize")?.addEventListener("click", function () {
-      window.nova?.app?.maximize?.();
+
+    document.getElementById("btn-new-file").addEventListener("click", newFile);
+    document.getElementById("btn-refresh-tree").addEventListener("click", function () {
+      if (currentFolder) openFolder(currentFolder);
     });
-    document.getElementById("btn-close")?.addEventListener("click", function () {
-      window.nova?.app?.close?.();
-    });
+
+    // ─── Menu Events (Electron) ─────────────────────────────────────────────
+    if (nova && nova.on) {
+      nova.on("menu:open-file", openFileDialog);
+      nova.on("menu:open-folder", openFolderDialog);
+      nova.on("menu:new-file", newFile);
+      nova.on("menu:save", saveCurrentFile);
+      nova.on("menu:toggle-sidebar", function () { sidebar.style.display = sidebar.style.display === "none" ? "" : "none"; });
+      nova.on("menu:toggle-terminal", function () { bottomPanel.style.display = bottomPanel.style.display === "none" ? "" : "none"; });
+    }
+
+    // ─── Title Bar (Electron) ───────────────────────────────────────────────
+    document.getElementById("btn-minimize")?.addEventListener("click", function () { nova?.app?.minimize?.(); });
+    document.getElementById("btn-maximize")?.addEventListener("click", function () { nova?.app?.maximize?.(); });
+    document.getElementById("btn-close")?.addEventListener("click", function () { nova?.app?.close?.(); });
+
+    // ─── Notifications ──────────────────────────────────────────────────────
+    function notify(msg, type) {
+      var container = document.getElementById("notifications");
+      var el = document.createElement("div");
+      el.className = "notification " + (type || "info");
+      el.innerHTML = '<div class="notification-message">' + msg + '</div>';
+      container.appendChild(el);
+      setTimeout(function () { el.remove(); }, 4000);
+    }
+
+    // ─── Status Bar ─────────────────────────────────────────────────────────
+    async function updateStatusBar() {
+      if (nova && nova.app) {
+        try {
+          var platform = await nova.app.platform();
+          document.getElementById("status-encoding").textContent = platform === "win32" ? "CRLF" : "LF";
+        } catch (e) {}
+      }
+    }
+    updateStatusBar();
   </script>
 </body>
 </html>
