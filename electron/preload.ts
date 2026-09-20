@@ -1,143 +1,101 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-export interface NovaAPI {
-  fs: {
-    readFile(filePath: string, encoding?: string): Promise<string>;
-    writeFile(filePath: string, content: string): Promise<boolean>;
-    readdir(dirPath: string): Promise<Array<{ name: string; isDirectory: boolean; isFile: boolean; isSymlink: boolean }>>;
-    mkdir(dirPath: string, recursive?: boolean): Promise<boolean>;
-    rm(targetPath: string, options?: { recursive?: boolean; force?: boolean }): Promise<boolean>;
-    rename(oldPath: string, newPath: string): Promise<boolean>;
-    exists(targetPath: string): Promise<boolean>;
-    stat(targetPath: string): Promise<{
-      size: number;
-      created: number;
-      modified: number;
-      isFile: boolean;
-      isDirectory: boolean;
-      isSymlink: boolean;
-      mode: number;
-    }>;
-  };
-  git: {
-    status(cwd: string): Promise<string>;
-    add(cwd: string, files: string[]): Promise<string>;
-    commit(cwd: string, message: string): Promise<string>;
-    push(cwd: string, remote?: string, branch?: string): Promise<string>;
-    pull(cwd: string, remote?: string, branch?: string): Promise<string>;
-    log(cwd: string, count?: number): Promise<string>;
-  };
-  terminal: {
-    execute(command: string, cwd?: string): Promise<{ stdout: string; stderr: string }>;
-  };
-  chat: {
-    send(message: string, context?: { filePath?: string; code?: string; language?: string }): Promise<{ reply: string; tokens?: number }>;
-  };
-  dialog: {
-    openFile(): Promise<{ filePath: string; content: string } | null>;
-    openFolder(): Promise<string | null>;
-    saveFile(filePath: string, content: string): Promise<boolean>;
-  };
-  app: {
-    version(): Promise<string>;
-    path(name: string): Promise<string>;
-    platform(): Promise<string>;
-  };
-  on(channel: string, callback: (...args: any[]) => void): () => void;
-}
-
 function wrapInvoke<T extends (...args: any[]) => Promise<any>>(fn: T): T {
   return (async (...args: any[]) => {
-    try {
-      return await fn(...args);
-    } catch (error: any) {
-      const message = error?.message ?? String(error);
-      throw new Error(`Nova API error: ${message}`);
-    }
+    try { return await fn(...args); }
+    catch (error: any) { throw new Error(error?.message ?? String(error)); }
   }) as T;
 }
 
-const novaAPI: NovaAPI = {
+function invoke(channel: string, ...args: any[]) {
+  return ipcRenderer.invoke(channel, ...args);
+}
+
+const novaAPI = {
   fs: {
-    readFile: wrapInvoke((filePath: string, encoding?: string) =>
-      ipcRenderer.invoke("fs:readFile", filePath, encoding)
-    ),
-    writeFile: wrapInvoke((filePath: string, content: string) =>
-      ipcRenderer.invoke("fs:writeFile", filePath, content)
-    ),
-    readdir: wrapInvoke((dirPath: string) =>
-      ipcRenderer.invoke("fs:readdir", dirPath)
-    ),
-    mkdir: wrapInvoke((dirPath: string, recursive?: boolean) =>
-      ipcRenderer.invoke("fs:mkdir", dirPath, recursive)
-    ),
-    rm: wrapInvoke((targetPath: string, options?: { recursive?: boolean; force?: boolean }) =>
-      ipcRenderer.invoke("fs:rm", targetPath, options)
-    ),
-    rename: wrapInvoke((oldPath: string, newPath: string) =>
-      ipcRenderer.invoke("fs:rename", oldPath, newPath)
-    ),
-    exists: wrapInvoke((targetPath: string) =>
-      ipcRenderer.invoke("fs:exists", targetPath)
-    ),
-    stat: wrapInvoke((targetPath: string) =>
-      ipcRenderer.invoke("fs:stat", targetPath)
-    ),
+    readFile: wrapInvoke((p: string, e?: string) => invoke("fs:readFile", p, e)),
+    writeFile: wrapInvoke((p: string, c: string) => invoke("fs:writeFile", p, c)),
+    readdir: wrapInvoke((p: string) => invoke("fs:readdir", p)),
+    mkdir: wrapInvoke((p: string, r?: boolean) => invoke("fs:mkdir", p, r)),
+    rm: wrapInvoke((p: string, o?: any) => invoke("fs:rm", p, o)),
+    rename: wrapInvoke((o: string, n: string) => invoke("fs:rename", o, n)),
+    exists: wrapInvoke((p: string) => invoke("fs:exists", p)),
+    stat: wrapInvoke((p: string) => invoke("fs:stat", p)),
   },
   git: {
-    status: wrapInvoke((cwd: string) =>
-      ipcRenderer.invoke("git:status", cwd)
-    ),
-    add: wrapInvoke((cwd: string, files: string[]) =>
-      ipcRenderer.invoke("git:add", cwd, files)
-    ),
-    commit: wrapInvoke((cwd: string, message: string) =>
-      ipcRenderer.invoke("git:commit", cwd, message)
-    ),
-    push: wrapInvoke((cwd: string, remote?: string, branch?: string) =>
-      ipcRenderer.invoke("git:push", cwd, remote, branch)
-    ),
-    pull: wrapInvoke((cwd: string, remote?: string, branch?: string) =>
-      ipcRenderer.invoke("git:pull", cwd, remote, branch)
-    ),
-    log: wrapInvoke((cwd: string, count?: number) =>
-      ipcRenderer.invoke("git:log", cwd, count)
-    ),
+    status: wrapInvoke((c: string) => invoke("git:status", c)),
+    add: wrapInvoke((c: string, f: string[]) => invoke("git:add", c, f)),
+    commit: wrapInvoke((c: string, m: string) => invoke("git:commit", c, m)),
+    push: wrapInvoke((c: string, r?: string, b?: string) => invoke("git:push", c, r, b)),
+    pull: wrapInvoke((c: string, r?: string, b?: string) => invoke("git:pull", c, r, b)),
+    log: wrapInvoke((c: string, n?: number) => invoke("git:log", c, n)),
   },
   terminal: {
-    execute: wrapInvoke((command: string, cwd?: string) =>
-      ipcRenderer.invoke("terminal:execute", command, cwd)
-    ),
+    execute: wrapInvoke((cmd: string, cwd?: string) => invoke("terminal:execute", cmd, cwd)),
   },
   chat: {
-    send: wrapInvoke((message: string, context?: { filePath?: string; code?: string; language?: string }) =>
-      ipcRenderer.invoke("chat:send", message, context)
-    ),
+    send: wrapInvoke((msg: string, ctx?: any) => invoke("chat:send", msg, ctx)),
   },
   dialog: {
-    openFile: wrapInvoke(() => ipcRenderer.invoke("dialog:openFile")),
-    openFolder: wrapInvoke(() => ipcRenderer.invoke("dialog:openFolder")),
-    saveFile: wrapInvoke((filePath: string, content: string) =>
-      ipcRenderer.invoke("dialog:saveFile", filePath, content)
-    ),
+    openFile: wrapInvoke(() => invoke("dialog:openFile")),
+    openFolder: wrapInvoke(() => invoke("dialog:openFolder")),
+    saveFile: wrapInvoke((p: string, c: string) => invoke("dialog:saveFile", p, c)),
+  },
+  byok: {
+    listProviders: wrapInvoke(() => invoke("byok:list")),
+    addProvider: wrapInvoke((p: any) => invoke("byok:add", p)),
+    removeProvider: wrapInvoke((id: string) => invoke("byok:remove", id)),
+    updateProvider: wrapInvoke((id: string, p: any) => invoke("byok:update", id, p)),
+    testProvider: wrapInvoke((id: string) => invoke("byok:test", id)),
+    getKeyUsage: wrapInvoke((id: string) => invoke("byok:usage", id)),
+  },
+  byoa: {
+    listAgents: wrapInvoke(() => invoke("byoa:list")),
+    addAgent: wrapInvoke((a: any) => invoke("byoa:add", a)),
+    removeAgent: wrapInvoke((id: string) => invoke("byoa:remove", id)),
+    updateAgent: wrapInvoke((id: string, a: any) => invoke("byoa:update", id, a)),
+    testAgent: wrapInvoke((id: string) => invoke("byoa:test", id)),
+    cloneAgent: wrapInvoke((id: string, n: string) => invoke("byoa:clone", id, n)),
+    exportAgent: wrapInvoke((id: string) => invoke("byoa:export", id)),
+    importAgent: wrapInvoke((c: any) => invoke("byoa:import", c)),
+  },
+  logs: {
+    getLogs: wrapInvoke((f?: any) => invoke("logs:get", f)),
+    getStats: wrapInvoke(() => invoke("logs:stats")),
+    search: wrapInvoke((q: string) => invoke("logs:search", q)),
+    exportLogs: wrapInvoke((fmt: string) => invoke("logs:export", fmt)),
+    clear: wrapInvoke(() => invoke("logs:clear")),
+    subscribe: wrapInvoke(() => invoke("logs:subscribe")),
+  },
+  monitoring: {
+    getHealth: wrapInvoke(() => invoke("monitoring:health")),
+    getMetrics: wrapInvoke(() => invoke("monitoring:metrics")),
+    getAlerts: wrapInvoke(() => invoke("monitoring:alerts")),
+    acknowledgeAlert: wrapInvoke((id: string) => invoke("monitoring:acknowledge", id)),
+  },
+  security: {
+    scan: wrapInvoke((p: string) => invoke("security:scan", p)),
+    getReport: wrapInvoke(() => invoke("security:report")),
+    getAuditLog: wrapInvoke((f?: any) => invoke("security:audit", f)),
+    exportAudit: wrapInvoke((fmt: string) => invoke("security:export", fmt)),
+  },
+  debug: {
+    start: wrapInvoke((c: any) => invoke("debug:start", c)),
+    stop: wrapInvoke((id?: string) => invoke("debug:stop", id)),
+    setBreakpoint: wrapInvoke((f: string, l: number, c?: string) => invoke("debug:breakpoint", f, l, c)),
+    step: wrapInvoke((t: string) => invoke("debug:step", t)),
+    continue: wrapInvoke(() => invoke("debug:continue")),
+    getStack: wrapInvoke(() => invoke("debug:stack")),
   },
   app: {
-    version: wrapInvoke(() =>
-      ipcRenderer.invoke("app:version")
-    ),
-    path: wrapInvoke((name: string) =>
-      ipcRenderer.invoke("app:path", name)
-    ),
-    platform: wrapInvoke(() =>
-      ipcRenderer.invoke("app:platform")
-    ),
+    version: wrapInvoke(() => invoke("app:version")),
+    path: wrapInvoke((n: string) => invoke("app:path", n)),
+    platform: wrapInvoke(() => invoke("app:platform")),
   },
   on(channel: string, callback: (...args: any[]) => void): () => void {
     const handler = (_event: any, ...args: any[]) => callback(...args);
     ipcRenderer.on(channel, handler);
-    return () => {
-      ipcRenderer.removeListener(channel, handler);
-    };
+    return () => { ipcRenderer.removeListener(channel, handler); };
   },
 };
 

@@ -7,209 +7,139 @@
   <title>Nova Sub-Agent IDE</title>
   <link rel="stylesheet" href="styles.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    .sidebar-tabs::-webkit-scrollbar{width:0;height:0}
+    .panel-icon{width:18px;height:18px;flex-shrink:0}
+    .progress-ring{transform:rotate(-90deg)}
+    .progress-ring-circle{transition:stroke-dashoffset .3s ease}
+    .ctx-pct{font-size:10px;font-weight:700;fill:var(--text-secondary);font-family:var(--font-mono)}
+    .byok-card,.byoa-card{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:var(--space-2);transition:border-color var(--transition-fast)}
+    .byok-card:hover,.byoa-card:hover{border-color:var(--accent)}
+    .byok-card .info,.byoa-card .info{flex:1;min-width:0}
+    .byok-card .name,.byoa-card .name{font-size:var(--font-size-sm);font-weight:500;color:var(--text-primary)}
+    .byok-card .type,.byoa-card .type{font-size:var(--font-size-xs);color:var(--text-muted)}
+    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0}
+    .status-dot.connected{background:var(--success);box-shadow:0 0 6px var(--success)}
+    .status-dot.error{background:var(--error)}
+    .add-btn{display:flex;align-items:center;justify-content:center;gap:var(--space-1);width:100%;padding:var(--space-2);background:var(--bg-surface);border:1px dashed var(--border);border-radius:var(--radius-md);color:var(--text-muted);cursor:pointer;font-size:var(--font-size-sm);transition:all var(--transition-fast)}
+    .add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--bg-hover)}
+    .log-entry{display:grid;grid-template-columns:70px 50px 90px 1fr;gap:var(--space-2);padding:2px var(--space-2);font-size:var(--font-size-xs);font-family:var(--font-mono);border-bottom:1px solid var(--border-subtle)}
+    .log-entry .ts{color:var(--text-muted)}
+    .log-entry .level{font-weight:700}
+    .log-entry .level.error{color:var(--error)}
+    .log-entry .level.warn{color:var(--warning)}
+    .log-entry .level.info{color:var(--info)}
+    .log-entry .level.debug{color:var(--text-muted)}
+    .log-entry .cat{color:var(--text-accent)}
+    .log-entry .msg{color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);padding:var(--space-2) var(--space-3)}
+    .metric-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:var(--space-3);text-align:center}
+    .metric-label{font-size:var(--font-size-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:var(--space-1)}
+    .metric-value{font-size:var(--font-size-xl);font-weight:700;color:var(--text-primary);font-family:var(--font-mono)}
+    .health-bar{height:8px;background:var(--bg-primary);border-radius:var(--radius-full);overflow:hidden;margin:var(--space-2) var(--space-3)}
+    .health-bar-fill{height:100%;background:var(--success);border-radius:var(--radius-full);transition:width .5s ease}
+    .filter-chip{display:inline-flex;align-items:center;padding:2px 8px;background:var(--bg-surface);border:1px solid var(--border);border-radius:var(--radius-full);font-size:var(--font-size-xs);color:var(--text-muted);cursor:pointer;transition:all var(--transition-fast);margin-right:var(--space-1)}
+    .filter-chip:hover{border-color:var(--accent);color:var(--text-primary)}
+    .filter-chip.active{background:var(--accent);color:var(--text-inverse);border-color:var(--accent)}
+    .sec-item{display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2);border-bottom:1px solid var(--border-subtle);font-size:var(--font-size-sm)}
+    .sec-badge{padding:1px 6px;border-radius:var(--radius-sm);font-size:10px;font-weight:700;text-transform:uppercase}
+    .sec-badge.critical{background:rgba(243,139,168,.2);color:var(--error)}
+    .sec-badge.high{background:rgba(249,226,175,.2);color:var(--warning)}
+    .sec-badge.medium{background:rgba(137,220,235,.2);color:var(--info)}
+    .sec-badge.low{background:rgba(166,227,161,.2);color:var(--success)}
+    .bp-item{display:flex;align-items:center;gap:var(--space-2);padding:4px var(--space-2);font-size:var(--font-size-sm);font-family:var(--font-mono)}
+    .bp-dot{width:8px;height:8px;border-radius:50%;background:var(--error);flex-shrink:0}
+  </style>
 </head>
 <body>
   <div id="app">
     <header id="titlebar">
-      <div class="titlebar-drag-region">
-        <span class="titlebar-logo">Nova</span>
-        <span class="titlebar-subtitle">Sub-Agent IDE</span>
-      </div>
+      <div class="titlebar-drag-region"><span class="titlebar-logo">Nova</span><span class="titlebar-subtitle">Sub-Agent IDE</span></div>
       <div class="titlebar-actions">
         <button class="titlebar-btn" id="btn-minimize" title="Minimize">&#x2013;</button>
         <button class="titlebar-btn" id="btn-maximize" title="Maximize">&#x25A1;</button>
         <button class="titlebar-btn titlebar-btn-close" id="btn-close" title="Close">&#x2715;</button>
       </div>
     </header>
-
     <div id="workspace">
       <aside id="sidebar">
         <div class="sidebar-tabs">
-          <button class="sidebar-tab active" data-panel="explorer" title="Explorer">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          </button>
-          <button class="sidebar-tab" data-panel="search" title="Search">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          </button>
-          <button class="sidebar-tab" data-panel="git" title="Source Control">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg>
-          </button>
-          <button class="sidebar-tab" data-panel="extensions" title="Extensions">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-          </button>
-          <button class="sidebar-tab" data-panel="agents" title="Sub-Agents">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 0-4 4v2a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg>
-          </button>
-          <button class="sidebar-tab" data-panel="chat" title="AI Chat">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-          </button>
+          <button class="sidebar-tab active" data-panel="explorer" title="Explorer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="sidebar-tab" data-panel="search" title="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></button>
+          <button class="sidebar-tab" data-panel="git" title="Source Control"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg></button>
+          <button class="sidebar-tab" data-panel="extensions" title="Extensions"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></button>
+          <button class="sidebar-tab" data-panel="agents" title="Sub-Agents"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a4 4 0 0 0-4 4v2a4 4 0 0 0 8 0V6a4 4 0 0 0-4-4z"/><path d="M6 10v1a6 6 0 0 0 12 0v-1"/><path d="M12 18v4"/><path d="M8 22h8"/></svg></button>
+          <button class="sidebar-tab" data-panel="chat" title="AI Chat"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>
+          <button class="sidebar-tab" data-panel="byok" title="BYOK"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></button>
+          <button class="sidebar-tab" data-panel="byoa" title="BYOA"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></button>
+          <button class="sidebar-tab" data-panel="security" title="Security"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></button>
+          <button class="sidebar-tab" data-panel="monitoring" title="Monitoring"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></button>
         </div>
         <div class="sidebar-content" id="sidebar-content">
-          <!-- Explorer Panel -->
           <div class="sidebar-panel active" id="panel-explorer">
-            <div class="panel-header">
-              <span>Explorer</span>
-              <div class="panel-actions">
-                <button class="icon-btn" id="btn-new-file" title="New File"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
-                <button class="icon-btn" id="btn-new-folder" title="New Folder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
-                <button class="icon-btn" id="btn-refresh-tree" title="Refresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
-              </div>
-            </div>
+            <div class="panel-header"><span>Explorer</span><div class="panel-actions">
+              <button class="icon-btn" id="btn-new-file" title="New File"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
+              <button class="icon-btn" id="btn-new-folder" title="New Folder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg></button>
+              <button class="icon-btn" id="btn-refresh-tree" title="Refresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+            </div></div>
             <div class="panel-section">
-              <div class="section-header" data-section="workspace">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                <span id="workspace-name">NOVA IDE</span>
-              </div>
+              <div class="section-header" data-section="workspace"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg><span id="workspace-name">NOVA IDE</span></div>
               <div class="section-content" id="file-tree" style="overflow:auto;max-height:calc(100vh - 200px);"></div>
             </div>
           </div>
-
-          <!-- Search Panel -->
-          <div class="sidebar-panel" id="panel-search">
-            <div class="panel-header"><span>Search</span></div>
-            <div class="search-container">
-              <div class="search-input-wrapper">
-                <input type="text" class="search-input" placeholder="Search across files..." id="search-input" />
-              </div>
-              <div id="search-results" class="search-results"></div>
-            </div>
-          </div>
-
-          <!-- Git Panel -->
-          <div class="sidebar-panel" id="panel-git">
-            <div class="panel-header"><span>Source Control</span></div>
-            <div class="git-container">
-              <div class="git-commit-box">
-                <textarea class="git-commit-input" placeholder="Commit message..." rows="3" id="git-commit-message"></textarea>
-                <button class="btn btn-primary btn-sm" id="git-commit-btn">Commit</button>
-              </div>
-              <div class="git-changes" id="git-changes"></div>
-            </div>
-          </div>
-
-          <!-- Extensions Panel -->
-          <div class="sidebar-panel" id="panel-extensions">
-            <div class="panel-header"><span>Extensions</span></div>
-            <div class="extensions-container" id="extensions-list"></div>
-          </div>
-
-          <!-- Agents Panel -->
-          <div class="sidebar-panel" id="panel-agents">
-            <div class="panel-header"><span>Sub-Agents</span></div>
-            <div class="agents-container" id="agents-list">
-              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Code Assistant</div><div class="agent-desc">Ready</div></div></div>
-              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Debug Agent</div><div class="agent-desc">Ready</div></div></div>
-              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Git Agent</div><div class="agent-desc">Ready</div></div></div>
-              <div class="agent-card"><div class="agent-status online"></div><div class="agent-info"><div class="agent-name">Test Agent</div><div class="agent-desc">Ready</div></div></div>
-            </div>
-          </div>
-
-          <!-- Chat Panel -->
-          <div class="sidebar-panel" id="panel-chat">
-            <div class="chat-panel">
-              <div class="chat-messages" id="chat-messages">
-                <div class="chat-welcome">
-                  <div class="chat-welcome-icon">&#x1F916;</div>
-                  <div class="chat-welcome-title">Nova AI Assistant</div>
-                  <div class="chat-welcome-sub">Ask me anything about code</div>
-                  <div class="chat-suggestions">
-                    <button class="chat-suggestion" data-msg="Explain this code">Explain code</button>
-                    <button class="chat-suggestion" data-msg="Find and fix bugs">Fix bugs</button>
-                    <button class="chat-suggestion" data-msg="Write tests for this">Write tests</button>
-                    <button class="chat-suggestion" data-msg="Optimize this function">Optimize</button>
-                    <button class="chat-suggestion" data-msg="Refactor this code">Refactor</button>
-                    <button class="chat-suggestion" data-msg="Explain error message">Explain error</button>
-                  </div>
-                </div>
-              </div>
-              <div class="chat-context-bar" id="chat-context-bar" style="display:none;">
-                <span class="chat-context-label">Context:</span>
-                <span class="chat-context-file" id="chat-context-file"></span>
-                <button class="chat-context-clear" id="chat-context-clear" title="Clear context">&#x2715;</button>
-              </div>
-              <div class="chat-input-area">
-                <textarea class="chat-input" id="chat-input" placeholder="Ask Nova AI... (Ctrl+Enter to send)" rows="1"></textarea>
-                <button class="chat-send-btn" id="chat-send-btn" title="Send">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          <div class="sidebar-panel" id="panel-search"><div class="panel-header"><span>Search</span></div><div class="search-container"><div class="search-input-wrapper"><input type="text" class="search-input" placeholder="Search across files..." id="search-input" /></div><div id="search-results" class="search-results"></div></div></div>
+          <div class="sidebar-panel" id="panel-git"><div class="panel-header"><span>Source Control</span></div><div class="git-container"><div class="git-commit-box"><textarea class="git-commit-input" placeholder="Commit message..." rows="3" id="git-commit-message"></textarea><button class="btn btn-primary btn-sm" id="git-commit-btn">Commit</button></div><div class="git-changes" id="git-changes"></div></div></div>
+          <div class="sidebar-panel" id="panel-extensions"><div class="panel-header"><span>Extensions</span></div><div class="extensions-container" id="extensions-list"></div></div>
+          <div class="sidebar-panel" id="panel-agents"><div class="panel-header"><span>Sub-Agents</span></div><div class="agents-container" id="agents-list"></div></div>
+          <div class="sidebar-panel" id="panel-chat"><div class="chat-panel">
+            <div class="chat-messages" id="chat-messages"><div class="chat-welcome"><div class="chat-welcome-icon">&#x1F916;</div><div class="chat-welcome-title">Nova AI Assistant</div><div class="chat-welcome-sub">Ask me anything about code</div>
+              <div class="chat-suggestions"><button class="chat-suggestion" data-msg="Explain this code">Explain code</button><button class="chat-suggestion" data-msg="Find and fix bugs">Fix bugs</button><button class="chat-suggestion" data-msg="Write tests for this">Write tests</button><button class="chat-suggestion" data-msg="Optimize this function">Optimize</button><button class="chat-suggestion" data-msg="Refactor this code">Refactor</button><button class="chat-suggestion" data-msg="Explain error message">Explain error</button></div></div></div>
+            <div class="chat-context-bar" id="chat-context-bar" style="display:none;"><span class="chat-context-label">Context:</span><span class="chat-context-file" id="chat-context-file"></span><button class="chat-context-clear" id="chat-context-clear" title="Clear context">&#x2715;</button></div>
+            <div class="chat-input-area"><textarea class="chat-input" id="chat-input" placeholder="Ask Nova AI... (Ctrl+Enter to send)" rows="1"></textarea><button class="chat-send-btn" id="chat-send-btn" title="Send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+            <div class="chat-context-bar" style="padding:4px 12px;justify-content:center;"><svg class="progress-ring" width="32" height="32" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--bg-active)" stroke-width="3"/><circle id="ctx-ring" class="progress-ring-circle" cx="18" cy="18" r="15.5" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="97.4" stroke-dashoffset="97.4" stroke-linecap="round"/><text id="ctx-pct" class="ctx-pct" x="18" y="18" text-anchor="middle" dominant-baseline="central">0%</text></svg><span style="font-size:10px;color:var(--text-muted);margin-left:4px;">Context used</span></div>
+          </div></div>
+          <div class="sidebar-panel" id="panel-byok"><div class="panel-header"><span>BYOK - API Keys</span><button class="icon-btn" id="btn-add-provider" title="Add Provider"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div><div class="panel-section" style="padding:var(--space-2) var(--space-3);overflow-y:auto;flex:1;" id="byok-providers"></div></div>
+          <div class="sidebar-panel" id="panel-byoa"><div class="panel-header"><span>BYOA - Custom Agents</span><button class="icon-btn" id="btn-add-agent" title="Add Agent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div><div class="panel-section" style="padding:var(--space-2) var(--space-3);overflow-y:auto;flex:1;" id="byoa-agents"></div></div>
+          <div class="sidebar-panel" id="panel-security"><div class="panel-header"><span>Security</span><button class="btn btn-sm" id="btn-scan">Scan</button></div><div style="padding:var(--space-2) var(--space-3);overflow-y:auto;flex:1;"><div id="sec-findings"></div><div style="margin-top:var(--space-3);"><div style="font-size:var(--font-size-xs);font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:var(--space-2);">Audit Log</div><div id="sec-audit-log"></div></div></div></div>
+          <div class="sidebar-panel" id="panel-monitoring"><div class="panel-header"><span>Monitoring</span></div><div style="overflow-y:auto;flex:1;"><div class="metric-grid" id="metric-grid"></div><div style="padding:var(--space-2) var(--space-3);"><div style="font-size:var(--font-size-xs);font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:var(--space-2);">Health Status</div><div class="health-bar"><div class="health-bar-fill" id="health-fill" style="width:100%"></div></div><div id="health-label" style="font-size:var(--font-size-xs);color:var(--text-muted);margin-top:2px;text-align:right;">100%</div></div><div style="padding:0 var(--space-3) var(--space-3);"><div style="font-size:var(--font-size-xs);font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:var(--space-2);">Alerts</div><div id="monitoring-alerts"></div></div></div></div>
         </div>
       </aside>
-
       <div class="resize-handle vertical" id="sidebar-resize"></div>
-
       <main id="main-area">
-        <div id="editor-tabs">
-          <div class="tabs-scroll">
-            <div class="tabs-container" id="tabs-container"></div>
-          </div>
-        </div>
-
+        <div id="editor-tabs"><div class="tabs-scroll"><div class="tabs-container" id="tabs-container"></div></div></div>
         <div id="editor-area">
-          <div id="welcome-view" class="welcome-view">
-            <div class="welcome-content">
-              <h1 class="welcome-logo">Nova</h1>
-              <p class="welcome-tagline">Sub-Agent IDE</p>
-              <div class="welcome-actions">
-                <div class="welcome-action" id="welcome-open-file">
-                  <kbd>Ctrl+O</kbd>
-                  <span>Open File</span>
-                </div>
-                <div class="welcome-action" id="welcome-open-folder">
-                  <kbd>Ctrl+K O</kbd>
-                  <span>Open Folder</span>
-                </div>
-                <div class="welcome-action" id="welcome-new-file">
-                  <kbd>Ctrl+N</kbd>
-                  <span>New File</span>
-                </div>
-                <div class="welcome-action" id="welcome-new-terminal">
-                  <kbd>Ctrl+`</kbd>
-                  <span>New Terminal</span>
-                </div>
-              </div>
+          <div id="welcome-view" class="welcome-view"><div class="welcome-content"><h1 class="welcome-logo">Nova</h1><p class="welcome-tagline">Sub-Agent IDE</p>
+            <div class="welcome-actions">
+              <div class="welcome-action" id="welcome-open-file"><kbd>Ctrl+O</kbd><span>Open File</span></div>
+              <div class="welcome-action" id="welcome-open-folder"><kbd>Ctrl+K O</kbd><span>Open Folder</span></div>
+              <div class="welcome-action" id="welcome-new-file"><kbd>Ctrl+N</kbd><span>New File</span></div>
+              <div class="welcome-action" id="welcome-new-terminal"><kbd>Ctrl+`</kbd><span>New Terminal</span></div>
             </div>
-          </div>
+          </div></div>
           <div id="editor-container" style="display:none;width:100%;height:100%;"></div>
         </div>
-
         <div class="resize-handle horizontal" id="terminal-resize"></div>
-
         <div id="bottom-panel">
           <div class="panel-tab-bar">
             <button class="panel-tab active" data-panel="terminal">Terminal</button>
             <button class="panel-tab" data-panel="output">Output</button>
             <button class="panel-tab" data-panel="problems">Problems</button>
+            <button class="panel-tab" data-panel="logs">Logs</button>
+            <button class="panel-tab" data-panel="debug">Debug</button>
           </div>
           <div class="panel-content">
-            <div class="panel-view active" id="view-terminal">
-              <div class="terminal-container" id="terminal-container">
-                <div class="terminal-output" id="terminal-output"></div>
-                <div class="terminal-input-row">
-                  <span class="terminal-prompt">❯</span>
-                  <input type="text" class="terminal-input" id="terminal-input" spellcheck="false" autocomplete="off" placeholder="Type a command..." />
-                </div>
-              </div>
-            </div>
-            <div class="panel-view" id="view-output">
-              <div class="terminal-container"><div class="terminal-output" id="output-log"></div></div>
-            </div>
-            <div class="panel-view" id="view-problems">
-              <div class="problems-list" id="problems-list"></div>
-            </div>
+            <div class="panel-view active" id="view-terminal"><div class="terminal-container" id="terminal-container"><div class="terminal-output" id="terminal-output"></div><div class="terminal-input-row"><span class="terminal-prompt">&#x276E;</span><input type="text" class="terminal-input" id="terminal-input" spellcheck="false" autocomplete="off" placeholder="Type a command..." /></div></div></div>
+            <div class="panel-view" id="view-output"><div class="terminal-container"><div class="terminal-output" id="output-log"></div></div></div>
+            <div class="panel-view" id="view-problems"><div class="problems-list" id="problems-list"></div></div>
+            <div class="panel-view" id="view-logs"><div style="display:flex;flex-direction:column;height:100%;"><div style="display:flex;align-items:center;gap:var(--space-2);padding:4px var(--space-3);border-bottom:1px solid var(--border-subtle);flex-shrink:0;"><button class="filter-chip active" data-level="all">All</button><button class="filter-chip" data-level="error">Error</button><button class="filter-chip" data-level="warn">Warn</button><button class="filter-chip" data-level="info">Info</button><button class="filter-chip" data-level="debug">Debug</button><button class="icon-btn small" id="btn-clear-logs" title="Clear Logs" style="margin-left:auto;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button></div><div style="flex:1;overflow-y:auto;" id="logs-output"></div></div></div>
+            <div class="panel-view" id="view-debug"><div style="display:flex;flex-direction:column;height:100%;"><div style="display:flex;gap:var(--space-2);padding:4px var(--space-3);border-bottom:1px solid var(--border-subtle);flex-shrink:0;"><button class="btn btn-sm btn-primary" id="btn-debug-start">Start</button><button class="btn btn-sm btn-danger" id="btn-debug-stop" disabled>Stop</button></div><div style="flex:1;overflow-y:auto;padding:var(--space-2) var(--space-3);"><div style="font-size:var(--font-size-xs);font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:var(--space-2);">Breakpoints</div><div id="debug-breakpoints"></div><div style="font-size:var(--font-size-xs);font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin:var(--space-3) 0 var(--space-2);">Call Stack</div><div id="debug-callstack"></div></div></div></div>
           </div>
         </div>
       </main>
     </div>
-
     <footer id="statusbar">
       <div class="status-left">
-        <span class="status-item branch" id="status-branch">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg>
-          main
-        </span>
+        <span class="status-item branch" id="status-branch"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><path d="M6 9v12"/></svg> main</span>
         <span class="status-item" id="status-sync">0&#x2193; 0&#x2191;</span>
       </div>
       <div class="status-right">
@@ -218,44 +148,29 @@
         <span class="status-item" id="status-cursor">Ln 1, Col 1</span>
         <span class="status-item" id="status-encoding">UTF-8</span>
         <span class="status-item" id="status-language">Plain Text</span>
+        <span class="status-item" id="status-health" style="color:var(--success);"><span class="status-dot connected" style="width:6px;height:6px;"></span> Healthy</span>
       </div>
     </footer>
   </div>
-
   <div id="context-menu" class="context-menu" style="display:none;"></div>
-
-  <div id="modal-overlay" class="modal-overlay" style="display:none;">
-    <div class="modal" id="modal">
-      <div class="modal-header" id="modal-header"></div>
-      <div class="modal-body" id="modal-body"></div>
-      <div class="modal-footer" id="modal-footer"></div>
-    </div>
-  </div>
-
+  <div id="modal-overlay" class="modal-overlay" style="display:none;"><div class="modal" id="modal"><div class="modal-header" id="modal-header"></div><div class="modal-body" id="modal-body"></div><div class="modal-footer" id="modal-footer"></div></div></div>
   <div id="notifications" class="notification-container"></div>
-
   <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
   <script>
-    // ═══════════════════════════════════════════════════════════════════════════
-    // Nova IDE - Full Application Logic
-    // ═══════════════════════════════════════════════════════════════════════════
-
     var nova = window.nova;
     var monacoEditor = null;
     var currentFilePath = null;
     var openFiles = new Map();
-    var fileTreeRoot = null;
     var currentFolder = null;
+    var chatHistoryLocal = [];
+    var chatContextFile = null;
+    var logFilterLevel = "all";
 
-    // ─── Monaco Editor Init ────────────────────────────────────────────────
     require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
-
     require(["vs/editor/editor.main"], function () {
       window.monaco = monaco;
-
       monaco.editor.defineTheme("nova-dark", {
-        base: "vs-dark",
-        inherit: true,
+        base: "vs-dark", inherit: true,
         rules: [
           { token: "comment", foreground: "6A9955", fontStyle: "italic" },
           { token: "keyword", foreground: "C586C0" },
@@ -264,144 +179,81 @@
           { token: "type", foreground: "4EC9B0" },
           { token: "function", foreground: "DCDCAA" },
           { token: "variable", foreground: "9CDCFE" },
-          { token: "operator", foreground: "D4D4D4" },
           { token: "tag", foreground: "569CD6" },
           { token: "attribute.name", foreground: "9CDCFE" },
-          { token: "attribute.value", foreground: "CE9178" },
+          { token: "attribute.value", foreground: "CE9178" }
         ],
         colors: {
-          "editor.background": "#0D1117",
-          "editor.foreground": "#C9D1D9",
-          "editor.lineHighlightBackground": "#161B22",
-          "editor.selectionBackground": "#264F78",
-          "editorCursor.foreground": "#58A6FF",
-          "editorLineNumber.foreground": "#484F58",
-          "editorLineNumber.activeForeground": "#C9D1D9",
-          "editorIndentGuide.background": "#21262D",
-          "editorWidget.background": "#161B22",
-          "editorWidget.border": "#30363D",
-          "editorSuggestWidget.background": "#161B22",
-          "editorSuggestWidget.border": "#30363D",
-          "input.background": "#0D1117",
-          "input.border": "#30363D",
-          "focusBorder": "#1F6FEB",
-        },
+          "editor.background": "#0D1117", "editor.foreground": "#C9D1D9",
+          "editor.lineHighlightBackground": "#161B22", "editor.selectionBackground": "#264F78",
+          "editorCursor.foreground": "#58A6FF", "editorLineNumber.foreground": "#484F58",
+          "editorLineNumber.activeForeground": "#C9D1D9", "editorIndentGuide.background": "#21262D",
+          "editorWidget.background": "#161B22", "editorWidget.border": "#30363D",
+          "input.background": "#0D1117", "input.border": "#30363D", "focusBorder": "#1F6FEB"
+        }
       });
-
       monaco.editor.setTheme("nova-dark");
       document.dispatchEvent(new Event("nova:ready"));
     });
 
     function createMonacoEditor(container) {
-      if (monacoEditor) { monacoEditor.dispose(); }
+      if (monacoEditor) monacoEditor.dispose();
       container.innerHTML = "";
       container.style.display = "block";
       document.getElementById("welcome-view").style.display = "none";
-
       monacoEditor = monaco.editor.create(container, {
-        value: "",
-        language: "plaintext",
-        theme: "nova-dark",
-        fontSize: 14,
-        fontFamily: "'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace",
-        minimap: { enabled: true },
-        automaticLayout: true,
-        scrollBeyondLastLine: false,
-        renderWhitespace: "selection",
-        bracketPairColorization: { enabled: true },
-        guides: { bracketPairs: true },
-        smoothScrolling: true,
-        cursorBlinking: "smooth",
-        cursorSmoothCaretAnimation: "on",
-        padding: { top: 8, bottom: 8 },
-        lineNumbers: "on",
-        folding: true,
-        contextmenu: true,
-        mouseWheelZoom: true,
-        suggest: {
-          showMethods: true, showFunctions: true, showConstructors: true,
-          showFields: true, showVariables: true, showClasses: true,
-          showProperties: true, showKeywords: true, showSnippets: true,
-        },
+        value: "", language: "plaintext", theme: "nova-dark", fontSize: 14,
+        fontFamily: "'Cascadia Code','Fira Code','JetBrains Mono',Consolas,monospace",
+        minimap: { enabled: true }, automaticLayout: true, scrollBeyondLastLine: false,
+        renderWhitespace: "selection", bracketPairColorization: { enabled: true },
+        guides: { bracketPairs: true }, smoothScrolling: true,
+        cursorBlinking: "smooth", cursorSmoothCaretAnimation: "on",
+        padding: { top: 8, bottom: 8 }, lineNumbers: "on", folding: true,
+        contextmenu: true, mouseWheelZoom: true
       });
-
       monacoEditor.onDidChangeCursorSelection(function () {
         var pos = monacoEditor.getPosition();
-        if (pos) {
-          document.getElementById("status-cursor").textContent = "Ln " + pos.lineNumber + ", Col " + pos.column;
-        }
+        if (pos) document.getElementById("status-cursor").textContent = "Ln " + pos.lineNumber + ", Col " + pos.column;
       });
-
       monacoEditor.onDidChangeModelContent(function () {
         if (currentFilePath && openFiles.has(currentFilePath)) {
-          var tab = openFiles.get(currentFilePath);
-          tab.modified = true;
+          openFiles.get(currentFilePath).modified = true;
           renderTabs();
         }
       });
     }
-
-    // ─── File Language Detection ────────────────────────────────────────────
-    function getLanguage(filePath) {
-      var ext = filePath.split(".").pop().toLowerCase();
-      var map = {
-        ts: "typescript", tsx: "typescriptreact", js: "javascript", jsx: "javascriptreact",
-        py: "python", rs: "rust", go: "go", java: "java", cpp: "cpp", c: "c",
-        cs: "csharp", rb: "ruby", php: "php", swift: "swift", kt: "kotlin",
-        html: "html", htm: "html", css: "css", scss: "scss", less: "less",
-        json: "json", yaml: "yaml", yml: "yaml", md: "markdown", sql: "sql",
-        sh: "shell", bash: "shell", ps1: "powershell", xml: "xml", svg: "xml",
-        dockerfile: "dockerfile", toml: "ini", ini: "ini", txt: "plaintext",
-      };
-      return map[ext] || "plaintext";
+    function getLanguage(fp) {
+      var ext = fp.split(".").pop().toLowerCase();
+      var m = {ts:"typescript",tsx:"typescriptreact",js:"javascript",jsx:"javascriptreact",py:"python",rs:"rust",go:"go",java:"java",cpp:"cpp",c:"c",cs:"csharp",rb:"ruby",php:"php",html:"html",htm:"html",css:"css",scss:"scss",less:"less",json:"json",yaml:"yaml",yml:"yaml",md:"markdown",sql:"sql",sh:"shell",bash:"shell",ps1:"powershell",xml:"xml",svg:"xml",toml:"ini",ini:"ini",txt:"plaintext"};
+      return m[ext] || "plaintext";
     }
-
-    function getLanguageName(filePath) {
-      var ext = filePath.split(".").pop().toLowerCase();
-      var map = {
-        ts: "TypeScript", tsx: "TypeScript React", js: "JavaScript", jsx: "JavaScript React",
-        py: "Python", rs: "Rust", go: "Go", java: "Java", cpp: "C++", c: "C",
-        html: "HTML", css: "CSS", json: "JSON", md: "Markdown", yaml: "YAML",
-      };
-      return map[ext] || ext.toUpperCase();
+    function getLanguageName(fp) {
+      var ext = fp.split(".").pop().toLowerCase();
+      var m = {ts:"TypeScript",tsx:"TypeScript React",js:"JavaScript",jsx:"JavaScript React",py:"Python",rs:"Rust",go:"Go",java:"Java",cpp:"C++",c:"C",html:"HTML",css:"CSS",json:"JSON",md:"Markdown",yaml:"YAML"};
+      return m[ext] || ext.toUpperCase();
     }
-
-    function getFileName(filePath) {
-      return filePath.split(/[/\\]/).pop();
-    }
-
+    function getFileName(fp) { return fp.split(/[/\\]/).pop(); }
     function getFileIcon(name) {
       var ext = name.split(".").pop().toLowerCase();
-      var icons = {
-        ts: { i: "TS", c: "#3178C6" }, tsx: { i: "TX", c: "#3178C6" },
-        js: { i: "JS", c: "#F7DF1E" }, jsx: { i: "JX", c: "#F7DF1E" },
-        json: { i: "{}", c: "#CB3837" }, md: { i: "M", c: "#519ABA" },
-        css: { i: "#", c: "#563D7C" }, html: { i: "<>", c: "#E44D26" },
-        py: { i: "Py", c: "#3776AB" }, rs: { i: "Rs", c: "#DEA584" },
-        go: { i: "Go", c: "#00ADD8" }, java: { i: "J", c: "#ED8B00" },
-        gitignore: { i: "G", c: "#F05032" }, sh: { i: "$", c: "#4EAA25" },
-      };
-      if (name === "gitignore") ext = "gitignore";
-      return icons[ext] || { i: name.charAt(0).toUpperCase(), c: "#89A0C6" };
+      if (name === ".gitignore" || name === "gitignore") ext = "gitignore";
+      var icons = {ts:{i:"TS",c:"#3178C6"},tsx:{i:"TX",c:"#3178C6"},js:{i:"JS",c:"#F7DF1E"},jsx:{i:"JX",c:"#F7DF1E"},json:{i:"{}",c:"#CB3837"},md:{i:"M",c:"#519ABA"},css:{i:"#",c:"#563D7C"},html:{i:"<>",c:"#E44D26"},py:{i:"Py",c:"#3776AB"},rs:{i:"Rs",c:"#DEA584"},go:{i:"Go",c:"#00ADD8"},java:{i:"J",c:"#ED8B00"},gitignore:{i:"G",c:"#F05032"},sh:{$:"$",c:"#4EAA25"}};
+      return icons[ext] || {i:name.charAt(0).toUpperCase(),c:"#89A0C6"};
     }
 
-    // ─── Open File ──────────────────────────────────────────────────────────
     async function openFile(filePath) {
-      if (!nova || !nova.fs) { notify("File system not available (web mode)", "warning"); return; }
+      if (!nova || !nova.fs) { notify("File system not available","warning"); return; }
       try {
         var content = await nova.fs.readFile(filePath);
-        openFiles.set(filePath, { content: content, modified: false });
+        openFiles.set(filePath, {content:content, modified:false});
         currentFilePath = filePath;
         var container = document.getElementById("editor-container");
         createMonacoEditor(container);
-        monacoEditor.setValue(content);
-        monacoEditor.setModelLanguage(monaco.editor.createModel(content, getLanguage(filePath)));
+        var model = monaco.editor.createModel(content, getLanguage(filePath));
+        monacoEditor.setModel(model);
         renderTabs();
         document.getElementById("status-language").textContent = getLanguageName(filePath);
         document.getElementById("status-encoding").textContent = "UTF-8";
-      } catch (err) {
-        notify("Failed to open file: " + err.message, "error");
-      }
+      } catch(err) { notify("Failed to open: "+err.message, "error"); }
     }
 
     async function saveCurrentFile() {
@@ -412,462 +264,424 @@
         var tab = openFiles.get(currentFilePath);
         if (tab) { tab.content = content; tab.modified = false; }
         renderTabs();
-        notify("File saved: " + getFileName(currentFilePath), "success");
-      } catch (err) {
-        notify("Failed to save: " + err.message, "error");
-      }
+        notify("File saved: "+getFileName(currentFilePath), "success");
+      } catch(err) { notify("Failed to save: "+err.message, "error"); }
     }
 
-    // ─── Tabs ───────────────────────────────────────────────────────────────
     function renderTabs() {
-      var container = document.getElementById("tabs-container");
-      container.innerHTML = "";
-      openFiles.forEach(function (tab, filePath) {
+      var c = document.getElementById("tabs-container"); c.innerHTML = "";
+      openFiles.forEach(function(tab, fp) {
         var btn = document.createElement("button");
-        btn.className = "editor-tab" + (filePath === currentFilePath ? " active" : "");
-        var name = getFileName(filePath);
-        var icon = getFileIcon(name);
-        btn.innerHTML = '<span style="color:' + icon.c + ';font-weight:700;font-size:10px;">' + icon.i + '</span> ' + name + (tab.modified ? ' <span class="modified-dot"></span>' : '') + ' <button class="close-btn" data-path="' + filePath + '">&times;</button>';
-        btn.addEventListener("click", function (e) {
-          if (e.target.classList.contains("close-btn")) {
-            closeTab(e.target.dataset.path);
-            return;
-          }
-          switchTab(filePath);
+        btn.className = "editor-tab" + (fp===currentFilePath ? " active" : "");
+        var name = getFileName(fp), icon = getFileIcon(name);
+        btn.innerHTML = '<span style="color:'+icon.c+';font-weight:700;font-size:10px;">'+icon.i+'</span> '+name+(tab.modified?' <span class="modified-dot"></span>':'')+' <button class="close-btn" data-path="'+fp+'">&times;</button>';
+        btn.addEventListener("click", function(e) {
+          if (e.target.classList.contains("close-btn")) { closeTab(e.target.dataset.path); return; }
+          switchTab(fp);
         });
-        container.appendChild(btn);
+        c.appendChild(btn);
       });
     }
 
-    function switchTab(filePath) {
-      if (monacoEditor && currentFilePath && openFiles.has(currentFilePath)) {
+    function switchTab(fp) {
+      if (monacoEditor && currentFilePath && openFiles.has(currentFilePath))
         openFiles.get(currentFilePath).content = monacoEditor.getValue();
-      }
-      currentFilePath = filePath;
-      var tab = openFiles.get(filePath);
+      currentFilePath = fp;
+      var tab = openFiles.get(fp);
       if (tab && monacoEditor) {
-        monacoEditor.setValue(tab.content);
-        monacoEditor.setModelLanguage(monaco.editor.createModel(tab.content, getLanguage(filePath)));
-        document.getElementById("status-language").textContent = getLanguageName(filePath);
+        var model = monaco.editor.createModel(tab.content, getLanguage(fp));
+        monacoEditor.setModel(model);
+        document.getElementById("status-language").textContent = getLanguageName(fp);
       }
       renderTabs();
     }
 
-    function closeTab(filePath) {
-      var tab = openFiles.get(filePath);
+    function closeTab(fp) {
+      var tab = openFiles.get(fp);
       if (tab && tab.modified) {
-        if (!confirm("Save changes to " + getFileName(filePath) + "?")) {
-          openFiles.delete(filePath);
-          if (currentFilePath === filePath) {
+        if (!confirm("Save changes to "+getFileName(fp)+"?")) {
+          openFiles.delete(fp);
+          if (currentFilePath===fp) {
             var keys = Array.from(openFiles.keys());
-            if (keys.length > 0) switchTab(keys[0]);
-            else {
-              currentFilePath = null;
-              document.getElementById("editor-container").style.display = "none";
-              document.getElementById("welcome-view").style.display = "";
-            }
+            if (keys.length>0) switchTab(keys[0]);
+            else { currentFilePath=null; document.getElementById("editor-container").style.display="none"; document.getElementById("welcome-view").style.display=""; }
           }
-          renderTabs();
-          return;
+          renderTabs(); return;
         }
       }
-      openFiles.delete(filePath);
-      if (currentFilePath === filePath) {
+      openFiles.delete(fp);
+      if (currentFilePath===fp) {
         var keys = Array.from(openFiles.keys());
-        if (keys.length > 0) switchTab(keys[0]);
-        else {
-          currentFilePath = null;
-          if (monacoEditor) { monacoEditor.dispose(); monacoEditor = null; }
-          document.getElementById("editor-container").style.display = "none";
-          document.getElementById("welcome-view").style.display = "";
-        }
+        if (keys.length>0) switchTab(keys[0]);
+        else { currentFilePath=null; if(monacoEditor){monacoEditor.dispose();monacoEditor=null;} document.getElementById("editor-container").style.display="none"; document.getElementById("welcome-view").style.display=""; }
       }
       renderTabs();
     }
-
-    // ─── File Explorer ──────────────────────────────────────────────────────
     async function loadFileTree(dirPath, container, depth) {
       if (!nova || !nova.fs) return;
       depth = depth || 0;
       try {
         var entries = await nova.fs.readdir(dirPath);
-        entries.sort(function (a, b) {
-          if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1;
-          return a.name.localeCompare(b.name);
-        });
-        for (var i = 0; i < entries.length; i++) {
+        entries.sort(function(a,b){ if(a.isDirectory!==b.isDirectory) return a.isDirectory?-1:1; return a.name.localeCompare(b.name); });
+        for (var i=0;i<entries.length;i++) {
           var entry = entries[i];
-          if (entry.name.startsWith(".") && entry.name !== ".gitignore") continue;
-          if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "dist") continue;
-          var fullPath = dirPath + (dirPath.endsWith("/") || dirPath.endsWith("\\") ? "" : "/") + entry.name;
+          if (entry.name.startsWith(".") && entry.name!==".gitignore") continue;
+          if (entry.name==="node_modules"||entry.name===".git"||entry.name==="dist") continue;
+          var fp = dirPath+(dirPath.endsWith("/")||dirPath.endsWith("\")?"":"/")+entry.name;
           var item = document.createElement("div");
           item.className = "file-tree-item";
-          item.style.paddingLeft = (12 + depth * 16) + "px";
-          item.dataset.path = fullPath;
-          item.dataset.type = entry.isDirectory ? "folder" : "file";
-
+          item.style.paddingLeft = (12+depth*16)+"px";
+          item.dataset.path = fp;
+          item.dataset.type = entry.isDirectory?"folder":"file";
           if (entry.isDirectory) {
             var icon = getFileIcon(entry.name);
-            item.innerHTML = '<span class="tree-arrow">&#x25B6;</span> <span style="color:' + icon.c + ';font-weight:700;font-size:11px;">' + icon.i + '</span> <span class="name">' + entry.name + '</span>';
-            var childContainer = document.createElement("div");
-            childContainer.className = "tree-children";
-            childContainer.style.display = "none";
-            var expanded = false;
-
-            item.addEventListener("click", (function (p, c, el) {
-              return function (e) {
-                e.stopPropagation();
-                var arrow = el.querySelector(".tree-arrow");
-                if (c.style.display === "none") {
-                  c.style.display = "block";
-                  arrow.innerHTML = "&#x25BC;";
-                  if (c.children.length === 0) loadFileTree(p, c, 0);
-                } else {
-                  c.style.display = "none";
-                  arrow.innerHTML = "&#x25B6;";
-                }
-              };
-            })(fullPath, childContainer, item));
-
-            container.appendChild(item);
-            container.appendChild(childContainer);
+            item.innerHTML = '<span class="tree-arrow">&#x25B6;</span> <span style="color:'+icon.c+';font-weight:700;font-size:11px;">'+icon.i+'</span> <span class="name">'+entry.name+'</span>';
+            var cc = document.createElement("div"); cc.className="tree-children"; cc.style.display="none";
+            item.addEventListener("click",(function(p,c,el){return function(e){e.stopPropagation();var a=el.querySelector(".tree-arrow");if(c.style.display==="none"){c.style.display="block";a.innerHTML="&#x25BC;";if(c.children.length===0)loadFileTree(p,c,0);}else{c.style.display="none";a.innerHTML="&#x25B6;";}};})(fp,cc,item));
+            container.appendChild(item); container.appendChild(cc);
           } else {
             var icon = getFileIcon(entry.name);
-            item.innerHTML = '<span style="width:14px;"></span> <span style="color:' + icon.c + ';font-weight:700;font-size:11px;">' + icon.i + '</span> <span class="name">' + entry.name + '</span>';
-            item.addEventListener("click", (function (p) {
-              return function (e) {
-                e.stopPropagation();
-                document.querySelectorAll(".file-tree-item").forEach(function (el) { el.classList.remove("active"); });
-                this.classList.add("active");
-                openFile(p);
-              };
-            })(fullPath));
+            item.innerHTML = '<span style="width:14px;"></span> <span style="color:'+icon.c+';font-weight:700;font-size:11px;">'+icon.i+'</span> <span class="name">'+entry.name+'</span>';
+            item.addEventListener("click",(function(p){return function(e){e.stopPropagation();document.querySelectorAll(".file-tree-item").forEach(function(el){el.classList.remove("active")});this.classList.add("active");openFile(p);};})(fp));
             container.appendChild(item);
           }
         }
-      } catch (err) {
-        var errDiv = document.createElement("div");
-        errDiv.style.cssText = "padding:8px;color:#f38ba8;font-size:11px;";
-        errDiv.textContent = "Cannot read directory";
-        container.appendChild(errDiv);
-      }
+      } catch(err) { var d=document.createElement("div");d.style.cssText="padding:8px;color:#f38ba8;font-size:11px;";d.textContent="Cannot read directory";container.appendChild(d); }
     }
 
     async function openFolder(folderPath) {
-      if (!nova || !nova.fs) { notify("File system not available", "warning"); return; }
+      if (!nova||!nova.fs) { notify("File system not available","warning"); return; }
       currentFolder = folderPath;
-      var treeEl = document.getElementById("file-tree");
-      treeEl.innerHTML = "";
-      var folderName = folderPath.split(/[/\\]/).pop();
-      document.getElementById("workspace-name").textContent = folderName.toUpperCase();
-      await loadFileTree(folderPath, treeEl, 0);
-      notify("Opened folder: " + folderName, "success");
+      var t = document.getElementById("file-tree"); t.innerHTML="";
+      document.getElementById("workspace-name").textContent = folderPath.split(/[/\\]/).pop().toUpperCase();
+      await loadFileTree(folderPath, t, 0);
+      notify("Opened folder: "+folderPath.split(/[/\\]/).pop(), "success");
     }
 
-    // ─── Terminal ───────────────────────────────────────────────────────────
     var termOutput = document.getElementById("terminal-output");
     var termInput = document.getElementById("terminal-input");
-    var cmdHistory = [];
-    var histIdx = -1;
+    var cmdHistory=[], histIdx=-1;
 
     function appendTerm(text, cls) {
       var line = document.createElement("div");
-      line.className = "terminal-line " + (cls || "");
+      line.className = "terminal-line "+(cls||"");
       line.textContent = text;
       termOutput.appendChild(line);
       termOutput.scrollTop = termOutput.scrollHeight;
     }
 
-    termInput.addEventListener("keydown", async function (e) {
-      if (e.key === "Enter") {
-        var cmd = termInput.value.trim();
-        if (!cmd) return;
-        cmdHistory.push(cmd);
-        histIdx = cmdHistory.length;
-        appendTerm("\u276E " + cmd, "terminal-command");
-        if (nova && nova.terminal) {
-          try {
-            var result = await nova.terminal.execute(cmd, currentFolder || undefined);
-            if (result.stdout) appendTerm(result.stdout, "terminal-stdout");
-            if (result.stderr) appendTerm(result.stderr, "terminal-stderr");
-          } catch (err) {
-            appendTerm(String(err), "terminal-stderr");
-          }
-        } else {
-          appendTerm("Terminal not available (web mode)", "terminal-stderr");
-        }
-        termInput.value = "";
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (histIdx > 0) { histIdx--; termInput.value = cmdHistory[histIdx]; }
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (histIdx < cmdHistory.length - 1) { histIdx++; termInput.value = cmdHistory[histIdx]; }
-        else { histIdx = cmdHistory.length; termInput.value = ""; }
-      } else if (e.key === "l" && e.ctrlKey) {
-        e.preventDefault();
-        termOutput.innerHTML = "";
-      }
+    termInput.addEventListener("keydown", async function(e) {
+      if (e.key==="Enter") {
+        var cmd = termInput.value.trim(); if(!cmd)return;
+        cmdHistory.push(cmd); histIdx=cmdHistory.length;
+        appendTerm("\u276E "+cmd, "terminal-command");
+        if (nova&&nova.terminal) {
+          try { var r=await nova.terminal.execute(cmd,currentFolder||undefined); if(r.stdout)appendTerm(r.stdout,"terminal-stdout"); if(r.stderr)appendTerm(r.stderr,"terminal-stderr"); } catch(err){appendTerm(String(err),"terminal-stderr");}
+        } else appendTerm("Terminal not available (web mode)","terminal-stderr");
+        termInput.value="";
+      } else if(e.key==="ArrowUp"){e.preventDefault();if(histIdx>0){histIdx--;termInput.value=cmdHistory[histIdx];}}
+      else if(e.key==="ArrowDown"){e.preventDefault();if(histIdx<cmdHistory.length-1){histIdx++;termInput.value=cmdHistory[histIdx];}else{histIdx=cmdHistory.length;termInput.value="";}}
+      else if(e.key==="l"&&e.ctrlKey){e.preventDefault();termOutput.innerHTML="";}
     });
-
-    // ─── Chat ───────────────────────────────────────────────────────────────
     var chatMessages = document.getElementById("chat-messages");
     var chatInput = document.getElementById("chat-input");
     var chatSendBtn = document.getElementById("chat-send-btn");
-    var chatContextFile = null;
-    var chatHistoryLocal = [];
+    var ctxPctEl = document.getElementById("ctx-pct");
+    var ctxRingEl = document.getElementById("ctx-ring");
+
+    function updateContextRing(pct) {
+      var circ = 2*Math.PI*15.5;
+      ctxRingEl.style.strokeDashoffset = circ-(pct/100)*circ;
+      ctxPctEl.textContent = pct+"%";
+      ctxRingEl.style.stroke = pct>80?"var(--error)":pct>50?"var(--warning)":"var(--accent)";
+    }
 
     function renderChatMessage(role, content) {
-      var msg = document.createElement("div");
-      msg.className = "chat-msg " + role;
-      var avatar = role === "user" ? "You" : "Nova";
-      var avatarClass = role === "user" ? "chat-avatar-user" : "chat-avatar-ai";
-      var html = '<div class="chat-msg-header"><span class="chat-avatar ' + avatarClass + '">' + avatar.charAt(0) + '</span><span class="chat-msg-name">' + avatar + '</span></div>';
-      html += '<div class="chat-msg-body">' + formatMarkdown(content) + '</div>';
-      msg.innerHTML = html;
+      var msg = document.createElement("div"); msg.className="chat-msg "+role;
+      var avatar = role==="user"?"You":"Nova";
+      var ac = role==="user"?"chat-avatar-user":"chat-avatar-ai";
+      msg.innerHTML = '<div class="chat-msg-header"><span class="chat-avatar '+ac+'">'+avatar.charAt(0)+'</span><span class="chat-msg-name">'+avatar+'</span></div><div class="chat-msg-body">'+formatMarkdown(content)+'</div>';
       chatMessages.appendChild(msg);
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     function formatMarkdown(text) {
-      var escaped = text
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-        .replace(/```(\w*)\n([\s\S]*?)```/g, function (m, lang, code) {
-          return '<div class="chat-code-block"><div class="chat-code-header"><span>' + (lang || 'code') + '</span><button onclick="navigator.clipboard.writeText(this.parentElement.nextElementSibling.textContent)">Copy</button></div><pre><code>' + code.trim() + '</code></pre></div>';
-        })
-        .replace(/`([^`]+)`/g, '<code class="chat-inline-code">$1</code>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-        .replace(/^### (.+)$/gm, '<h4>$1</h4>')
-        .replace(/^## (.+)$/gm, '<h3>$1</h3>')
-        .replace(/^# (.+)$/gm, '<h2>$1</h2>')
-        .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-        .replace(/\n/g, '<br>');
-      return '<div class="chat-markdown">' + escaped + '</div>';
+      var e = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+        .replace(/```(\w*)\n([\s\S]*?)```/g,function(m,l,c){return '<div class="chat-code-block"><div class="chat-code-header"><span>'+(l||'code')+'</span><button onclick="navigator.clipboard.writeText(this.parentElement.nextElementSibling.textContent)">Copy</button></div><pre><code>'+c.trim()+'</code></div></div>';})
+        .replace(/`([^`]+)`/g,'<code class="chat-inline-code">$1</code>')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>')
+        .replace(/^### (.+)$/gm,'<h4>$1</h4>')
+        .replace(/^## (.+)$/gm,'<h3>$1</h3>')
+        .replace(/^# (.+)$/gm,'<h2>$1</h2>')
+        .replace(/^[-*] (.+)$/gm,'<li>$1</li>')
+        .replace(/\n/g,'<br>');
+      return '<div class="chat-markdown">'+e+'</div>';
     }
 
     async function sendChat() {
-      var msg = chatInput.value.trim();
-      if (!msg) return;
-
-      var welcome = chatMessages.querySelector(".chat-welcome");
-      if (welcome) welcome.remove();
-
-      renderChatMessage("user", msg);
-      chatHistoryLocal.push({ role: "user", content: msg });
-      chatInput.value = "";
-      chatInput.style.height = "auto";
-
+      var msg = chatInput.value.trim(); if(!msg)return;
+      var w = chatMessages.querySelector(".chat-welcome"); if(w)w.remove();
+      renderChatMessage("user",msg);
+      chatHistoryLocal.push({role:"user",content:msg});
+      chatInput.value=""; chatInput.style.height="auto";
       var context = null;
-      if (chatContextFile && currentFilePath && monacoEditor) {
-        context = { filePath: currentFilePath, code: monacoEditor.getValue(), language: getLanguage(currentFilePath) };
-      }
-
-      var typingEl = document.createElement("div");
-      typingEl.className = "chat-msg assistant";
-      typingEl.innerHTML = '<div class="chat-msg-header"><span class="chat-avatar chat-avatar-ai">N</span><span class="chat-msg-name">Nova</span></div><div class="chat-msg-body"><div class="chat-typing"><span></span><span></span><span></span></div></div>';
-      chatMessages.appendChild(typingEl);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-
+      if(chatContextFile&&currentFilePath&&monacoEditor)
+        context={filePath:currentFilePath,code:monacoEditor.getValue(),language:getLanguage(currentFilePath)};
+      var typingEl = document.createElement("div"); typingEl.className="chat-msg assistant";
+      typingEl.innerHTML='<div class="chat-msg-header"><span class="chat-avatar chat-avatar-ai">N</span><span class="chat-msg-name">Nova</span></div><div class="chat-msg-body"><div class="chat-typing"><span></span><span></span><span></span></div></div>';
+      chatMessages.appendChild(typingEl); chatMessages.scrollTop=chatMessages.scrollHeight;
       try {
         var result = await nova.chat.send(msg, context);
-        typingEl.remove();
-        renderChatMessage("assistant", result.reply);
-        chatHistoryLocal.push({ role: "assistant", content: result.reply });
-      } catch (err) {
-        typingEl.remove();
-        renderChatMessage("assistant", "Error: " + err.message);
-      }
+        typingEl.remove(); renderChatMessage("assistant",result.reply);
+        chatHistoryLocal.push({role:"assistant",content:result.reply});
+        if(result.contextPct!==undefined) updateContextRing(result.contextPct);
+        else updateContextRing(Math.min(100,chatHistoryLocal.length*8));
+      } catch(err) { typingEl.remove(); renderChatMessage("assistant","Error: "+err.message); }
     }
 
-    chatSendBtn.addEventListener("click", sendChat);
-    chatInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); sendChat(); }
-    });
-    chatInput.addEventListener("input", function () {
-      this.style.height = "auto";
-      this.style.height = Math.min(this.scrollHeight, 120) + "px";
-    });
+    chatSendBtn.addEventListener("click",sendChat);
+    chatInput.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.ctrlKey||e.metaKey)){e.preventDefault();sendChat();}});
+    chatInput.addEventListener("input",function(){this.style.height="auto";this.style.height=Math.min(this.scrollHeight,120)+"px";});
+    document.querySelectorAll(".chat-suggestion").forEach(function(b){b.addEventListener("click",function(){chatInput.value=this.dataset.msg;sendChat();});});
+    document.getElementById("chat-context-clear").addEventListener("click",function(){chatContextFile=null;document.getElementById("chat-context-bar").style.display="none";});
+    function setChatContext(){if(currentFilePath){chatContextFile=currentFilePath;document.getElementById("chat-context-file").textContent=getFileName(currentFilePath);document.getElementById("chat-context-bar").style.display="flex";}}
+    async function renderProviders() {
+      var c = document.getElementById("byok-providers"); c.innerHTML="";
+      try {
+        var providers = nova&&nova.byok ? await nova.byok.list() : [];
+        if(!providers.length){c.innerHTML='<div style="text-align:center;padding:var(--space-4);color:var(--text-muted);font-size:var(--font-size-sm);">No providers configured</div>';return;}
+        providers.forEach(function(p){
+          var card=document.createElement("div"); card.className="byok-card";
+          card.innerHTML='<div class="status-dot '+(p.connected?'connected':'')+'"></div><div class="info"><div class="name">'+p.name+'</div><div class="type">'+p.type+'</div></div><button class="btn btn-sm" data-action="test" data-id="'+p.id+'">Test</button><button class="btn btn-sm btn-danger" data-action="remove" data-id="'+p.id+'">&times;</button>';
+          c.appendChild(card);
+        });
+        c.querySelectorAll("[data-action='test']").forEach(function(b){b.addEventListener("click",function(){testProvider(this.dataset.id);});});
+        c.querySelectorAll("[data-action='remove']").forEach(function(b){b.addEventListener("click",function(){removeProvider(this.dataset.id);});});
+      } catch(e){c.innerHTML='<div style="padding:var(--space-3);color:var(--text-muted);font-size:var(--font-size-sm);">API not available</div>';}
+    }
+    async function addProvider() {
+      var name=prompt("Provider name:");if(!name)return;
+      var type=prompt("Provider type (openai/anthropic/custom):","openai");if(!type)return;
+      var key=prompt("API key:");if(!key)return;
+      if(nova&&nova.byok){try{await nova.byok.add({name:name,type:type,key:key});notify("Provider added: "+name,"success");renderProviders();}catch(e){notify("Failed: "+e.message,"error");}}
+    }
+    async function testProvider(id) {
+      if(!nova||!nova.byok)return notify("BYOK API not available","warning");
+      try{var r=await nova.byok.test(id);notify(r.success?"Provider test passed":"Provider test failed",r.success?"success":"error");}catch(e){notify("Test failed: "+e.message,"error");}
+    }
+    async function removeProvider(id) {
+      if(!nova||!nova.byok)return;
+      try{await nova.byok.remove(id);notify("Provider removed","info");renderProviders();}catch(e){notify("Failed: "+e.message,"error");}
+    }
+    document.getElementById("btn-add-provider").addEventListener("click",addProvider);
 
-    document.querySelectorAll(".chat-suggestion").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        chatInput.value = this.dataset.msg;
-        sendChat();
-      });
-    });
+    async function renderAgentsCustom() {
+      var c = document.getElementById("byoa-agents"); c.innerHTML="";
+      try {
+        var agents = nova&&nova.byoa ? await nova.byoa.list() : [];
+        if(!agents.length){c.innerHTML='<div style="text-align:center;padding:var(--space-4);color:var(--text-muted);font-size:var(--font-size-sm);">No custom agents</div>';return;}
+        agents.forEach(function(a){
+          var card=document.createElement("div"); card.className="byoa-card";
+          card.innerHTML='<div class="status-dot '+(a.status==='online'?'connected':'')+'"></div><div class="info"><div class="name">'+a.name+'</div><div class="type">'+a.type+' / '+a.model+'</div></div><button class="btn btn-sm" data-action="test" data-id="'+a.id+'">Test</button><button class="btn btn-sm" data-action="clone" data-id="'+a.id+'">Clone</button>';
+          c.appendChild(card);
+        });
+        c.querySelectorAll("[data-action='test']").forEach(function(b){b.addEventListener("click",function(){testAgent(this.dataset.id);});});
+        c.querySelectorAll("[data-action='clone']").forEach(function(b){b.addEventListener("click",function(){cloneAgent(this.dataset.id);});});
+      } catch(e){c.innerHTML='<div style="padding:var(--space-3);color:var(--text-muted);font-size:var(--font-size-sm);">API not available</div>';}
+    }
+    async function addAgent() {
+      var name=prompt("Agent name:");if(!name)return;
+      var type=prompt("Agent type (coder/reviewer/planner):","coder");if(!type)return;
+      var model=prompt("Model:","gpt-4");if(!model)return;
+      if(nova&&nova.byoa){try{await nova.byoa.add({name:name,type:type,model:model});notify("Agent added: "+name,"success");renderAgentsCustom();}catch(e){notify("Failed: "+e.message,"error");}}
+    }
+    async function testAgent(id) {
+      if(!nova||!nova.byoa)return;
+      try{var r=await nova.byoa.test(id);notify(r.success?"Agent test passed":"Agent test failed",r.success?"success":"error");}catch(e){notify("Test failed: "+e.message,"error");}
+    }
+    async function cloneAgent(id) {
+      var name=prompt("Clone name:");if(!name)return;
+      if(nova&&nova.byoa){try{await nova.byoa.clone(id,name);notify("Agent cloned: "+name,"success");renderAgentsCustom();}catch(e){notify("Failed: "+e.message,"error");}}
+    }
+    document.getElementById("btn-add-agent").addEventListener("click",addAgent);
+    async function renderLogs() {
+      var c = document.getElementById("logs-output");
+      try {
+        var logs = nova&&nova.logs ? await nova.logs.get() : [];
+        c.innerHTML="";
+        logs.forEach(function(log){
+          if(logFilterLevel!=="all"&&log.level!==logFilterLevel)return;
+          var e=document.createElement("div"); e.className="log-entry";
+          var ts=log.timestamp?new Date(log.timestamp).toLocaleTimeString():"--:--:--";
+          e.innerHTML='<span class="ts">'+ts+'</span><span class="level '+log.level+'">'+log.level.toUpperCase()+'</span><span class="cat">'+(log.category||'-')+'</span><span class="msg">'+(log.message||'')+'</span>';
+          c.appendChild(e);
+        });
+      } catch(err){c.innerHTML='<div style="padding:var(--space-3);color:var(--text-muted);font-size:var(--font-size-sm);">Logs not available</div>';}
+    }
+    document.querySelectorAll(".filter-chip").forEach(function(c){c.addEventListener("click",function(){document.querySelectorAll(".filter-chip").forEach(function(x){x.classList.remove("active")});this.classList.add("active");logFilterLevel=this.dataset.level;renderLogs();});});
+    document.getElementById("btn-clear-logs").addEventListener("click",function(){document.getElementById("logs-output").innerHTML="";});
 
-    document.getElementById("chat-context-clear").addEventListener("click", function () {
-      chatContextFile = null;
-      document.getElementById("chat-context-bar").style.display = "none";
-    });
-
-    function setChatContext() {
-      if (currentFilePath) {
-        chatContextFile = currentFilePath;
-        document.getElementById("chat-context-file").textContent = getFileName(currentFilePath);
-        document.getElementById("chat-context-bar").style.display = "flex";
-      }
+    async function renderMonitoring() {
+      try {
+        var health = nova&&nova.monitoring ? await nova.monitoring.getHealth() : {status:"healthy",pct:100};
+        var metrics = nova&&nova.monitoring ? await nova.monitoring.getMetrics() : {uptime:"0m",memory:"0MB",logs:0,connections:0};
+        var g = document.getElementById("metric-grid");
+        g.innerHTML='<div class="metric-card"><div class="metric-label">Uptime</div><div class="metric-value">'+(metrics.uptime||"0m")+'</div></div><div class="metric-card"><div class="metric-label">Memory</div><div class="metric-value">'+(metrics.memory||"0MB")+'</div></div><div class="metric-card"><div class="metric-label">Logs</div><div class="metric-value">'+(metrics.logs||0)+'</div></div><div class="metric-card"><div class="metric-label">Connections</div><div class="metric-value">'+(metrics.connections||0)+'</div></div>';
+        var pct = health.pct||100;
+        document.getElementById("health-fill").style.width=pct+"%";
+        document.getElementById("health-fill").style.background=pct>80?"var(--success)":pct>50?"var(--warning)":"var(--error)";
+        document.getElementById("health-label").textContent=pct+"%";
+        var ac=document.getElementById("monitoring-alerts"); ac.innerHTML="";
+        if(health.alerts&&health.alerts.length){health.alerts.forEach(function(a){var el=document.createElement("div");el.className="sec-item";el.innerHTML='<span class="sec-badge '+(a.severity||'medium')+'">'+(a.severity||'info')+'</span><span style="flex:1;font-size:var(--font-size-sm);">'+a.message+'</span>';ac.appendChild(el);});}
+        else ac.innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);padding:var(--space-2);">No active alerts</div>';
+      } catch(e){document.getElementById("metric-grid").innerHTML='<div style="grid-column:1/-1;text-align:center;padding:var(--space-4);color:var(--text-muted);">Monitoring not available</div>';}
     }
 
-    // ─── Sidebar Panel Switching ────────────────────────────────────────────
-    document.querySelectorAll(".sidebar-tab").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        document.querySelectorAll(".sidebar-tab").forEach(function (t) { t.classList.remove("active"); });
-        document.querySelectorAll(".sidebar-panel").forEach(function (p) { p.classList.remove("active"); });
+    async function scanProject() {
+      if(!nova||!nova.security)return notify("Security API not available","warning");
+      if(!currentFolder)return notify("Open a folder first","warning");
+      try{notify("Scanning project...","info");var f=await nova.security.scan(currentFolder);renderFindings(f);}catch(e){notify("Scan failed: "+e.message,"error");}
+    }
+    function renderFindings(findings) {
+      var c=document.getElementById("sec-findings"); c.innerHTML="";
+      if(!findings||!findings.length){c.innerHTML='<div style="padding:var(--space-3);text-align:center;color:var(--success);font-size:var(--font-size-sm);">No findings - project is clean</div>';return;}
+      findings.forEach(function(f){var el=document.createElement("div");el.className="sec-item";el.innerHTML='<span class="sec-badge '+(f.severity||'medium')+'">'+(f.severity||'info')+'</span><span style="flex:1;font-size:var(--font-size-sm);">'+f.message+'</span><span style="font-size:var(--font-size-xs);color:var(--text-muted);">'+(f.file||'')+'</span>';c.appendChild(el);});
+    }
+    async function renderAuditLog() {
+      var c=document.getElementById("sec-audit-log");
+      try{var entries=nova&&nova.security?await nova.security.getAuditLog():[];c.innerHTML="";if(!entries.length){c.innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);">No audit entries</div>';return;}entries.forEach(function(e){var el=document.createElement("div");el.style.cssText="font-size:var(--font-size-xs);color:var(--text-muted);padding:2px 0;font-family:var(--font-mono);";el.textContent="["+(e.timestamp||"")+"] "+(e.action||"")+" - "+(e.detail||"");c.appendChild(el);});}catch(err){c.innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);">Audit log not available</div>';}
+    }
+    document.getElementById("btn-scan").addEventListener("click",scanProject);
+    function renderExtensions() {
+      var c=document.getElementById("extensions-list"); c.innerHTML="";
+      [{name:"Nova AI",desc:"Built-in AI assistant",v:"1.0.0",on:true},{name:"Git Lens",desc:"Git integration enhanced",v:"2.3.1",on:true},{name:"Terminal Plus",desc:"Advanced terminal features",v:"1.1.0",on:true},{name:"Theme Catppuccin",desc:"Catppuccin color theme",v:"3.0.0",on:true},{name:"Bracket Pair",desc:"Colorized bracket pairs",v:"1.0.4",on:true},{name:"Prettier",desc:"Code formatter",v:"9.1.2",on:false},{name:"ESLint",desc:"JavaScript linting",v:"3.0.10",on:true},{name:"Path Intellisense",desc:"File path autocomplete",v:"2.8.0",on:false}].forEach(function(ext){
+        var el=document.createElement("div"); el.className="agent-card"; el.style.cursor="default";
+        el.innerHTML='<div class="agent-status '+(ext.on?'online':'offline')+'"></div><div class="agent-info"><div class="agent-name">'+ext.name+'</div><div class="agent-desc">'+ext.desc+' v'+ext.v+'</div></div>';
+        c.appendChild(el);
+      });
+    }
+    function renderBuiltinAgents() {
+      var c=document.getElementById("agents-list"); c.innerHTML="";
+      [{name:"Code Assistant",s:"online",d:"Helps write and review code"},{name:"Debug Agent",s:"online",d:"Identifies and fixes bugs"},{name:"Git Agent",s:"online",d:"Manages version control"},{name:"Test Agent",s:"online",d:"Generates and runs tests"}].forEach(function(a){
+        var el=document.createElement("div"); el.className="agent-card";
+        el.innerHTML='<div class="agent-status '+a.s+'"></div><div class="agent-info"><div class="agent-name">'+a.name+'</div><div class="agent-desc">'+a.d+'</div></div>';
+        c.appendChild(el);
+      });
+    }
+
+    function renderDebugPanel() {
+      document.getElementById("debug-breakpoints").innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);">No breakpoints set</div>';
+      document.getElementById("debug-callstack").innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);">No active debug session</div>';
+    }
+    var debugActive=false;
+    document.getElementById("btn-debug-start").addEventListener("click",function(){
+      debugActive=true; this.disabled=true; document.getElementById("btn-debug-stop").disabled=false;
+      document.getElementById("debug-callstack").innerHTML='<div class="bp-item"><div class="bp-dot"></div><span>main() at index.js:1</span></div>';
+      notify("Debug session started","info");
+    });
+    document.getElementById("btn-debug-stop").addEventListener("click",function(){
+      debugActive=false; this.disabled=true; document.getElementById("btn-debug-start").disabled=false;
+      document.getElementById("debug-callstack").innerHTML='<div style="font-size:var(--font-size-xs);color:var(--text-muted);">No active debug session</div>';
+      notify("Debug session stopped","info");
+    });
+
+    document.querySelectorAll(".sidebar-tab").forEach(function(tab){
+      tab.addEventListener("click",function(){
+        document.querySelectorAll(".sidebar-tab").forEach(function(t){t.classList.remove("active");});
+        document.querySelectorAll(".sidebar-panel").forEach(function(p){p.classList.remove("active");});
         tab.classList.add("active");
-        var panel = document.getElementById("panel-" + tab.getAttribute("data-panel"));
-        if (panel) panel.classList.add("active");
+        var panel=document.getElementById("panel-"+tab.getAttribute("data-panel"));
+        if(panel)panel.classList.add("active");
+        var pn=tab.getAttribute("data-panel");
+        if(pn==="byok")renderProviders();
+        if(pn==="byoa")renderAgentsCustom();
+        if(pn==="logs")renderLogs();
+        if(pn==="monitoring")renderMonitoring();
+        if(pn==="security")renderAuditLog();
       });
     });
 
-    // ─── Bottom Panel Tabs ──────────────────────────────────────────────────
-    document.querySelectorAll(".panel-tab").forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        document.querySelectorAll(".panel-tab").forEach(function (t) { t.classList.remove("active"); });
-        document.querySelectorAll(".panel-view").forEach(function (v) { v.classList.remove("active"); });
+    document.querySelectorAll(".panel-tab").forEach(function(tab){
+      tab.addEventListener("click",function(){
+        document.querySelectorAll(".panel-tab").forEach(function(t){t.classList.remove("active");});
+        document.querySelectorAll(".panel-view").forEach(function(v){v.classList.remove("active");});
         tab.classList.add("active");
-        var view = document.getElementById("view-" + tab.getAttribute("data-panel"));
-        if (view) view.classList.add("active");
+        var view=document.getElementById("view-"+tab.getAttribute("data-panel"));
+        if(view)view.classList.add("active");
+        if(tab.getAttribute("data-panel")==="logs")renderLogs();
       });
     });
 
-    // ─── Section Collapse ───────────────────────────────────────────────────
-    document.querySelectorAll(".section-header").forEach(function (h) {
-      h.addEventListener("click", function () { h.classList.toggle("collapsed"); });
-    });
+    document.querySelectorAll(".section-header").forEach(function(h){h.addEventListener("click",function(){h.classList.toggle("collapsed");});});
 
-    // ─── Resize Handles ─────────────────────────────────────────────────────
-    (function () {
-      var sidebarResize = document.getElementById("sidebar-resize");
-      var sidebar = document.getElementById("sidebar");
-      var termResize = document.getElementById("terminal-resize");
-      var bottomPanel = document.getElementById("bottom-panel");
-      var dragging = null;
-
-      sidebarResize.addEventListener("mousedown", function (e) { dragging = "sidebar"; document.body.style.cursor = "col-resize"; e.preventDefault(); });
-      termResize.addEventListener("mousedown", function (e) { dragging = "terminal"; document.body.style.cursor = "row-resize"; e.preventDefault(); });
-      document.addEventListener("mousemove", function (e) {
-        if (dragging === "sidebar") { sidebar.style.width = Math.max(180, Math.min(500, e.clientX)) + "px"; }
-        else if (dragging === "terminal") {
-          var rect = bottomPanel.parentElement.getBoundingClientRect();
-          bottomPanel.style.height = Math.max(80, Math.min(500, rect.bottom - e.clientY)) + "px";
-        }
-      });
-      document.addEventListener("mouseup", function () { dragging = null; document.body.style.cursor = ""; });
+    (function(){
+      var sr=document.getElementById("sidebar-resize"),sb=document.getElementById("sidebar"),tr=document.getElementById("terminal-resize"),bp=document.getElementById("bottom-panel"),drag=null;
+      sr.addEventListener("mousedown",function(e){drag="sidebar";document.body.style.cursor="col-resize";e.preventDefault();});
+      tr.addEventListener("mousedown",function(e){drag="terminal";document.body.style.cursor="row-resize";e.preventDefault();});
+      document.addEventListener("mousemove",function(e){if(drag==="sidebar"){sb.style.width=Math.max(180,Math.min(500,e.clientX))+"px";}else if(drag==="terminal"){var r=bp.parentElement.getBoundingClientRect();bp.style.height=Math.max(80,Math.min(500,r.bottom-e.clientY))+"px";}});
+      document.addEventListener("mouseup",function(){drag=null;document.body.style.cursor="";});
     })();
 
-    // ─── Keyboard Shortcuts ─────────────────────────────────────────────────
-    document.addEventListener("keydown", function (e) {
-      var ctrl = e.ctrlKey || e.metaKey;
-      if (ctrl && e.key === "s") { e.preventDefault(); saveCurrentFile(); }
-      if (ctrl && e.key === "o") { e.preventDefault(); openFileDialog(); }
-      if (ctrl && e.key === "n" && !e.shiftKey) { e.preventDefault(); newFile(); }
-      if (ctrl && e.key === "`") { e.preventDefault(); document.querySelector('.panel-tab[data-panel="terminal"]').click(); termInput.focus(); }
-      if (ctrl && e.key === "b") { e.preventDefault(); sidebar.style.display = sidebar.style.display === "none" ? "" : "none"; }
-      if (ctrl && e.key === "j") { e.preventDefault(); bottomPanel.style.display = bottomPanel.style.display === "none" ? "" : "none"; }
-      if (ctrl && e.shiftKey && e.key === "L") { e.preventDefault(); setChatContext(); document.querySelector('.sidebar-tab[data-panel="chat"]').click(); chatInput.focus(); }
-      if (e.key === "F12") { e.preventDefault(); }
+    document.addEventListener("keydown",function(e){
+      var ctrl=e.ctrlKey||e.metaKey;
+      if(ctrl&&e.key==="s"){e.preventDefault();saveCurrentFile();}
+      if(ctrl&&e.key==="o"){e.preventDefault();openFileDialog();}
+      if(ctrl&&e.key==="n"&&!e.shiftKey){e.preventDefault();newFile();}
+      if(ctrl&&e.key==="`"){e.preventDefault();document.querySelector('.panel-tab[data-panel="terminal"]').click();termInput.focus();}
+      if(ctrl&&e.key==="b"){e.preventDefault();sb=document.getElementById("sidebar");sb.style.display=sb.style.display==="none"?"":"none";}
+      if(ctrl&&e.key==="j"){e.preventDefault();bp=document.getElementById("bottom-panel");bp.style.display=bp.style.display==="none"?"":"none";}
+      if(ctrl&&e.shiftKey&&e.key==="L"){e.preventDefault();setChatContext();document.querySelector('.sidebar-tab[data-panel="chat"]').click();chatInput.focus();}
     });
 
-    // ─── Dialogs ────────────────────────────────────────────────────────────
     async function openFileDialog() {
-      if (nova && nova.dialog) {
-        var result = await nova.dialog.openFile();
-        if (result) {
-          openFiles.set(result.filePath, { content: result.content, modified: false });
-          currentFilePath = result.filePath;
-          var container = document.getElementById("editor-container");
-          createMonacoEditor(container);
-          monacoEditor.setValue(result.content);
-          monacoEditor.setModelLanguage(monaco.editor.createModel(result.content, getLanguage(result.filePath)));
-          renderTabs();
-          document.getElementById("status-language").textContent = getLanguageName(result.filePath);
-        }
-      } else {
-        notify("File dialog not available (web mode)", "warning");
-      }
+      if(nova&&nova.dialog){var r=await nova.dialog.openFile();if(r){openFiles.set(r.filePath,{content:r.content,modified:false});currentFilePath=r.filePath;var c=document.getElementById("editor-container");createMonacoEditor(c);var m=monaco.editor.createModel(r.content,getLanguage(r.filePath));monacoEditor.setModel(m);renderTabs();document.getElementById("status-language").textContent=getLanguageName(r.filePath);}}
+      else notify("File dialog not available (web mode)","warning");
     }
-
     async function openFolderDialog() {
-      if (nova && nova.dialog) {
-        var folder = await nova.dialog.openFolder();
-        if (folder) openFolder(folder);
-      } else {
-        notify("Folder dialog not available (web mode)", "warning");
-      }
+      if(nova&&nova.dialog){var f=await nova.dialog.openFolder();if(f)openFolder(f);}
+      else notify("Folder dialog not available (web mode)","warning");
     }
-
     async function newFile() {
-      var name = prompt("File name:");
-      if (!name) return;
-      if (currentFolder && nova && nova.fs) {
-        var fullPath = currentFolder + (currentFolder.endsWith("/") || currentFolder.endsWith("\\") ? "" : "/") + name;
-        await nova.fs.writeFile(fullPath, "");
-        openFiles.set(fullPath, { content: "", modified: false });
-        currentFilePath = fullPath;
-        var container = document.getElementById("editor-container");
-        createMonacoEditor(container);
-        monacoEditor.setModelLanguage(monaco.editor.createModel("", getLanguage(fullPath)));
-        renderTabs();
-        if (currentFolder) openFolder(currentFolder);
-      } else {
-        openFiles.set(name, { content: "", modified: false });
-        currentFilePath = name;
-        var container = document.getElementById("editor-container");
-        createMonacoEditor(container);
-        renderTabs();
-      }
+      var name=prompt("File name:");if(!name)return;
+      if(currentFolder&&nova&&nova.fs){var fp=currentFolder+(currentFolder.endsWith("/")||currentFolder.endsWith("\")?"":"/")+name;await nova.fs.writeFile(fp,"");openFiles.set(fp,{content:"",modified:false});currentFilePath=fp;var c=document.getElementById("editor-container");createMonacoEditor(c);renderTabs();if(currentFolder)openFolder(currentFolder);}
+      else{openFiles.set(name,{content:"",modified:false});currentFilePath=name;var c=document.getElementById("editor-container");createMonacoEditor(c);renderTabs();}
     }
 
-    // ─── Welcome Actions ────────────────────────────────────────────────────
-    document.getElementById("welcome-open-file").addEventListener("click", openFileDialog);
-    document.getElementById("welcome-open-folder").addEventListener("click", openFolderDialog);
-    document.getElementById("welcome-new-file").addEventListener("click", newFile);
-    document.getElementById("welcome-new-terminal").addEventListener("click", function () {
-      document.querySelector('.panel-tab[data-panel="terminal"]').click();
-      termInput.focus();
-    });
+    document.getElementById("welcome-open-file").addEventListener("click",openFileDialog);
+    document.getElementById("welcome-open-folder").addEventListener("click",openFolderDialog);
+    document.getElementById("welcome-new-file").addEventListener("click",newFile);
+    document.getElementById("welcome-new-terminal").addEventListener("click",function(){document.querySelector('.panel-tab[data-panel="terminal"]').click();termInput.focus();});
+    document.getElementById("btn-new-file").addEventListener("click",newFile);
+    document.getElementById("btn-refresh-tree").addEventListener("click",function(){if(currentFolder)openFolder(currentFolder);});
 
-    document.getElementById("btn-new-file").addEventListener("click", newFile);
-    document.getElementById("btn-refresh-tree").addEventListener("click", function () {
-      if (currentFolder) openFolder(currentFolder);
-    });
-
-    // ─── Menu Events (Electron) ─────────────────────────────────────────────
-    if (nova && nova.on) {
-      nova.on("menu:open-file", openFileDialog);
-      nova.on("menu:open-folder", openFolderDialog);
-      nova.on("menu:new-file", newFile);
-      nova.on("menu:save", saveCurrentFile);
-      nova.on("menu:toggle-sidebar", function () { sidebar.style.display = sidebar.style.display === "none" ? "" : "none"; });
-      nova.on("menu:toggle-terminal", function () { bottomPanel.style.display = bottomPanel.style.display === "none" ? "" : "none"; });
+    if(nova&&nova.on){
+      nova.on("menu:open-file",openFileDialog);
+      nova.on("menu:open-folder",openFolderDialog);
+      nova.on("menu:new-file",newFile);
+      nova.on("menu:save",saveCurrentFile);
+      nova.on("menu:toggle-sidebar",function(){var s=document.getElementById("sidebar");s.style.display=s.style.display==="none"?"":"none";});
+      nova.on("menu:toggle-terminal",function(){var b=document.getElementById("bottom-panel");b.style.display=b.style.display==="none"?"":"none";});
     }
 
-    // ─── Title Bar (Electron) ───────────────────────────────────────────────
-    document.getElementById("btn-minimize")?.addEventListener("click", function () { nova?.app?.minimize?.(); });
-    document.getElementById("btn-maximize")?.addEventListener("click", function () { nova?.app?.maximize?.(); });
-    document.getElementById("btn-close")?.addEventListener("click", function () { nova?.app?.close?.(); });
+    document.getElementById("btn-minimize")?.addEventListener("click",function(){nova?.app?.minimize?.();});
+    document.getElementById("btn-maximize")?.addEventListener("click",function(){nova?.app?.maximize?.();});
+    document.getElementById("btn-close")?.addEventListener("click",function(){nova?.app?.close?.();});
 
-    // ─── Notifications ──────────────────────────────────────────────────────
-    function notify(msg, type) {
-      var container = document.getElementById("notifications");
-      var el = document.createElement("div");
-      el.className = "notification " + (type || "info");
-      el.innerHTML = '<div class="notification-message">' + msg + '</div>';
-      container.appendChild(el);
-      setTimeout(function () { el.remove(); }, 4000);
+    function notify(msg,type) {
+      var c=document.getElementById("notifications");
+      var el=document.createElement("div"); el.className="notification "+(type||"info");
+      el.innerHTML='<div class="notification-message">'+msg+'</div>';
+      c.appendChild(el); setTimeout(function(){el.remove();},4000);
     }
 
-    // ─── Status Bar ─────────────────────────────────────────────────────────
     async function updateStatusBar() {
-      if (nova && nova.app) {
-        try {
-          var platform = await nova.app.platform();
-          document.getElementById("status-encoding").textContent = platform === "win32" ? "CRLF" : "LF";
-        } catch (e) {}
-      }
+      if(nova&&nova.app){try{var p=await nova.app.platform();document.getElementById("status-encoding").textContent=p==="win32"?"CRLF":"LF";}catch(e){}}
     }
     updateStatusBar();
+    renderExtensions();
+    renderBuiltinAgents();
+    renderDebugPanel();
   </script>
 </body>
 </html>
