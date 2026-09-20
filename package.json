@@ -1,11 +1,77 @@
 {
-  "name": "nova-subagent-system",
-  "version": "2.0.0",
-  "description": "Enterprise-grade autonomous sub-agent orchestration system",
+  "name": "nova-subagent-ide",
+  "version": "1.0.0",
+  "description": "Autonomous AI-powered IDE with 147+ parallel agents, real-time streaming, real file operations, real terminal, real git integration, BYOK/BYOA support, 81 REST API endpoints, Electron desktop app, and production-grade security monitoring.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
     "nova": "./dist/cli/index.js"
+  },
+  "keywords": [
+    "ai-ide",
+    "autonomous-agents",
+    "sub-agent",
+    "llm",
+    "code-generation",
+    "ai-development",
+    "ide",
+    "code-editor",
+    "electron-app",
+    "typescript",
+    "openai",
+    "anthropic",
+    "claude",
+    "gpt-4",
+    "multi-agent",
+    "parallel-agents",
+    "real-time",
+    "websocket",
+    "rest-api",
+    "devtools",
+    "developer-tools",
+    "code-completion",
+    "code-analysis",
+    "byok",
+    "byoa",
+    "mcp",
+    "lsp",
+    "plugin-system",
+    "extension-marketplace",
+    "terminal",
+    "git-integration",
+    "file-explorer",
+    "monaco-editor",
+    "debug-adapter",
+    "security-audit",
+    "penetration-testing",
+    "load-testing",
+    "monitoring",
+    "logging",
+    "checkpoint",
+    "diff-engine",
+    "chat-system",
+    "collaboration",
+    "docker",
+    "ci-cd",
+    "cross-platform",
+    "windows",
+    "macos",
+    "linux",
+    "self-hosted",
+    "open-source"
+  ],
+  "author": "asubilla",
+  "license": "MIT",
+  "homepage": "https://github.com/asubilla/Nova-IDE#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/asubilla/Nova-IDE.git"
+  },
+  "bugs": {
+    "url": "https://github.com/asubilla/Nova-IDE/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   },
   "scripts": {
     "build": "tsc",
@@ -50,8 +116,5 @@
     "prettier": "^3.0.0",
     "typescript": "^5.3.0",
     "vitest": "^1.6.1"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }

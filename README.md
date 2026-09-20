@@ -2,22 +2,29 @@
 
 # NOVA SUB-AGENT IDE
 
-### Autonomous AI-Powered Development Environment
+### Autonomous AI-Powered Development Environment with 147+ Parallel Agents
 
-**100+ Parallel Agents | Real-Time Streaming | Real File Operations | Real Terminal | Real Git**
+**Full-stack IDE with real-time AI agents, real file operations, real terminal, real git, BYOK/BYOA, Electron desktop app, 81 REST API endpoints, production security, and monitoring.**
 
 ---
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)]()
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
-[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Agents](https://img.shields.io/badge/agents-147+-orange.svg)]()
-[![API](https://img.shields.io/badge/API-81%20endpoints-purple.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/asubilla/Nova-IDE/releases)
+[![Node.js](https://img.shields.io/badge/Node.js-24.x-green.svg)](https://nodejs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://typescriptlang.org)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Build](https://img.shields.io/badge/build-passing-brightgreen.svg)](https://github.com/asubilla/Nova-IDE/actions)
+[![Agents](https://img.shields.io/badge/agents-147+-orange.svg)](#agent-system)
+[![API](https://img.shields.io/badge/API-81%20endpoints-purple.svg)](#v1-api-endpoints)
+[![Electron](https://img.shields.io/badge/Electron-44-blue.svg)](#electron-desktop-app)
+[![Platform](https://img.shields.io/badge/platform-Win%20%7C%20Mac%20%7C%20Linux-lightgrey.svg)](#installation)
 
 </div>
 
 ---
+
+## KEYWORDS
+
+`ai-ide` `autonomous-agents` `sub-agent` `llm` `code-generation` `ai-development` `ide` `code-editor` `electron-app` `typescript` `openai` `anthropic` `claude` `gpt-4` `multi-agent` `parallel-agents` `real-time` `websocket` `rest-api` `devtools` `developer-tools` `code-completion` `code-analysis` `byok` `byoa` `mcp` `lsp` `plugin-system` `extension-marketplace` `terminal` `git-integration` `file-explorer` `monaco-editor` `debug-adapter` `security-audit` `penetration-testing` `load-testing` `monitoring` `logging` `checkpoint` `diff-engine` `chat-system` `collaboration` `docker` `ci-cd` `cross-platform` `self-hosted`
 
 ## TABLE OF CONTENTS
 
