@@ -1,0 +1,60 @@
+export {
+  FixStrategyEngine,
+  FixPromptResult,
+  StrategyHistory,
+  StrategyAnalysis,
+  selectBestStrategy,
+  buildFixPromptFromContext,
+  createStrategyHistory,
+  updateStrategyHistory,
+} from './strategies';
+
+export {
+  ValidationRunner,
+  ValidationRunnerConfig,
+  ValidationRunOptions,
+  ValidationAggregator,
+  AggregatedValidationResult,
+  ValidationSummary,
+  ValidationResultAnalyzer,
+  ErrorPattern,
+  PatternMatch,
+  ValidationResultAnalysis,
+  createValidationRunner,
+  createValidationAggregator,
+  createValidationResultAnalyzer,
+  buildTypeScriptValidationRule,
+  buildESLintValidationRule,
+  buildTestValidationRule,
+  buildSecurityValidationRule,
+  buildValidationGateFromRule,
+} from './validator';
+
+export {
+  ErrorFixLoop,
+  LoopConfig,
+  LoopProgress,
+  LoopResult,
+  IterationContext,
+  createErrorFixLoop,
+  buildDefaultLoopConfig,
+  createLoopConfigWithDefaults,
+} from './loop';
+
+export {
+  EscalationManager,
+  EscalationAction,
+  EscalationDetails,
+  EscalationHistoryEntry,
+  EscalationContext,
+  RuleEvaluationResult,
+  SpecialistSpawnRequest,
+  TaskSplitRequest,
+  ScopeReductionRequest,
+  SubtaskSpec,
+  ReducedScope,
+  createEscalationManager,
+  buildDefaultEscalationRules,
+  formatEscalationAction,
+  getEscalationSummary,
+} from './escalation';

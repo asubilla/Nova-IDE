@@ -1,0 +1,15 @@
+export { AgentMessageBus, AgentMessage, MessageSubscription, MessageQueue } from './communication/message-bus';
+export { PluginSystem, PluginManifest, Plugin, PluginHook } from './plugins/plugin-system';
+export { WorkflowEngine, WorkflowNode, WorkflowEdge, WorkflowDefinition, WorkflowExecution, NodeExecutionState } from './workflow/workflow-engine';
+export { SelfHealingSystem, AgentHealth, HealingAction, HealthCheck, HealingRule } from './healing/self-healing';
+export { KnowledgeBase, KnowledgeEntry, KnowledgeQuery, KnowledgeStats } from './knowledge/knowledge-base';
+export { AIModelRouter, AIModel, ModelRoute, TaskRequirements } from './models/model-router';
+export { CostOptimizer, CostEntry, BudgetConfig } from './cost/cost-optimizer';
+export { CrossSessionMemory, MemoryEntry } from './memory/cross-session-memory';
+export { AgentVersioning, TemplateVersion, VersionDiff } from './versioning/agent-versioning';
+export { PerformanceProfiler, AgentProfile, PerformanceMetric } from './profiling/performance-profiler';
+export { AgentMarketplace, MarketplaceTemplate } from './marketplace/agent-marketplace';
+export { ToolCreator, CustomTool } from './tools/tool-creator';
+export { ABTesting, ABTest, ABVariant, ABResult } from './abtesting/ab-testing';
+export { LearningSystem, LearningEntry, LearningRule } from './learning/learning-system';
+export { RealTimeCollaboration, CollaborationSession, CollaborationMessage, PairProgrammingAssignment } from './collaboration/real-time-collaboration';

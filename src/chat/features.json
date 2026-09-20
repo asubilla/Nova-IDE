@@ -1,0 +1,41 @@
+{
+  "version": "1.0.0",
+  "features": {
+    "rich-text": { "enabled": true, "config": {} },
+    "code-playground": { "enabled": true, "config": { "themes": ["dark", "light", "monokai"] } },
+    "mermaid": { "enabled": true, "config": {} },
+    "latex": { "enabled": true, "config": {} },
+    "link-preview": { "enabled": true, "config": { "cacheTtl": 3600 } },
+    "image-preview": { "enabled": true, "config": { "maxSize": 10 } },
+    "file-preview": { "enabled": true, "config": {} },
+    "voice-message": { "enabled": true, "config": { "maxDuration": 300 } },
+    "statistics": { "enabled": true, "config": {} },
+    "status-messages": { "enabled": true, "config": {} },
+    "message-queue": { "enabled": true, "config": { "maxQueueSize": 100 } },
+    "search-filters": { "enabled": true, "config": {} },
+    "drag-drop": { "enabled": true, "config": { "maxFileSize": 50 } },
+    "task-cards": { "enabled": true, "config": {} },
+    "accessibility": { "enabled": true, "config": {} },
+    "animations": { "enabled": true, "config": { "speed": "normal" } },
+    "sound-effects": { "enabled": true, "config": { "volume": 0.5 } },
+    "backup": { "enabled": true, "config": { "autoBackup": "daily" } },
+    "diff-viewer": { "enabled": true, "config": {} },
+    "checkpoints": { "enabled": true, "config": { "autoInterval": 50 } },
+    "secret-masking": { "enabled": true, "config": { "policy": "normal" } },
+    "threads": { "enabled": true, "config": {} },
+    "pins": { "enabled": true, "config": { "maxPins": 10 } },
+    "bookmarks": { "enabled": true, "config": {} }
+  },
+  "providers": [
+    { "id": "openai", "name": "OpenAI", "enabled": true, "baseUrl": "https://api.openai.com/v1" },
+    { "id": "anthropic", "name": "Anthropic", "enabled": true, "baseUrl": "https://api.anthropic.com" },
+    { "id": "google", "name": "Google Gemini", "enabled": true, "baseUrl": "https://generativelanguage.googleapis.com" }
+  ],
+  "agents": [
+    { "id": "code-reviewer", "name": "Code Reviewer", "type": "review", "enabled": true },
+    { "id": "debugger", "name": "Debugger", "type": "debug", "enabled": true },
+    { "id": "documenter", "name": "Documenter", "type": "docs", "enabled": true },
+    { "id": "tester", "name": "Test Writer", "type": "test", "enabled": true },
+    { "id": "optimizer", "name": "Optimizer", "type": "optimize", "enabled": true }
+  ]
+}

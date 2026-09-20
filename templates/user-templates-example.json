@@ -1,0 +1,145 @@
+{
+  "$schema": "./template-schema.json",
+  "version": "1.0",
+  "templates": [
+    {
+      "id": "custom-express-api",
+      "name": "Custom Express.js API Handler",
+      "category": "api",
+      "subcategory": "express",
+      "tags": ["api", "express", "rest", "node", "typescript", "middleware", "validation"],
+      "description": "Creates a production-ready Express.js API endpoint with input validation, error handling, rate limiting, and proper TypeScript types. Ideal for building RESTful APIs.",
+      "complexity": "medium",
+      "systemPrompt": "You are an expert Express.js and TypeScript developer. You create production-ready API endpoints with:\n\n1. Input validation using zod or joi\n2. Proper error handling with custom error classes\n3. Rate limiting middleware\n4. Request/response TypeScript types\n5. Unit tests using vitest\n6. Proper logging with structured format\n\nAlways follow these patterns:\n- Use async/await with proper error boundaries\n- Return consistent response format: { success: boolean, data?: T, error?: string }\n- Validate all inputs at the route level\n- Use dependency injection for services\n- Keep controllers thin, services fat\n\nNEVER:\n- Use any type\n- Skip input validation\n- Log sensitive data\n- Use console.log (use structured logger)",
+      "userPromptTemplate": "TASK: Create a new Express.js API endpoint.\n\nEndpoint: {{method}} {{path}}\nDescription: {{description}}\nInput fields: {{inputFields}}\nOutput fields: {{outputFields}}\nDatabase: {{database}}\n\nRequirements:\n- TypeScript with strict mode\n- Input validation with zod\n- Proper error handling\n- Unit tests\n- Rate limiting\n\nFile structure:\nsrc/routes/{{routeName}}.ts - Route handler\nsrc/services/{{serviceName}}.ts - Business logic\nsrc/types/{{typeName}}.ts - TypeScript types\nsrc/validators/{{validatorName}}.ts - Zod schemas\ntests/{{testName}}.test.ts - Unit tests",
+      "validationCommands": [
+        { "type": "typecheck", "command": "npx tsc --noEmit", "timeoutMs": 60000, "required": true },
+        { "type": "lint", "command": "npx eslint src/routes/{{routeName}}.ts src/services/{{serviceName}}.ts", "timeoutMs": 30000, "required": true },
+        { "type": "test", "command": "npx vitest run tests/{{testName}}.test.ts", "timeoutMs": 120000, "required": true }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep"],
+      "blockedTools": ["webfetch", "websearch"],
+      "bashAllowedCommands": ["npm", "npx", "node", "tsc", "eslint", "vitest"],
+      "retryPolicy": { "maxRetries": 3, "backoffMs": 5000, "escalateOnFailure": true },
+      "expectedOutput": "code",
+      "contextPatterns": ["express", "api", "endpoint", "rest", "http"],
+      "estimatedDurationMs": 300000,
+      "resourceProfile": { "memoryMB": 512, "cpuPercent": 50 }
+    },
+    {
+      "id": "custom-react-component",
+      "name": "Custom React Component",
+      "category": "frontend",
+      "subcategory": "react",
+      "tags": ["react", "typescript", "component", "hooks", "css", "testing", "storybook"],
+      "description": "Creates a reusable React component with TypeScript, custom hooks, CSS modules, Storybook stories, and comprehensive tests. Follows atomic design principles.",
+      "complexity": "medium",
+      "systemPrompt": "You are a senior React developer specializing in component architecture. You create:\n\n1. TypeScript components with proper prop types\n2. Custom hooks for reusable logic\n3. CSS Modules for styling\n4. Storybook stories for visual testing\n5. React Testing Library tests\n6. Accessibility (a11y) compliance\n\nComponent patterns:\n- Use composition over inheritance\n- Keep components under 200 lines\n- Separate presentational and container components\n- Use React.memo for performance\n- Implement proper key props for lists\n\nTesting patterns:\n- Test user interactions, not implementation details\n- Use screen queries by role/label\n- Mock external dependencies\n- Test accessibility with jest-axe",
+      "userPromptTemplate": "TASK: Create a new React component.\n\nComponent name: {{componentName}}\nProps: {{props}}\nDescription: {{description}}\nVariants: {{variants}}\nInteractions: {{interactions}}\n\nRequirements:\n- TypeScript with strict mode\n- CSS Modules\n- Custom hooks if needed\n- Storybook stories\n- React Testing Library tests\n- Accessibility compliance\n\nFile structure:\nsrc/components/{{componentName}}/index.tsx\nsrc/components/{{componentName}}/{{componentName}}.module.css\nsrc/components/{{componentName}}/{{componentName}}.stories.tsx\nsrc/components/{{componentName}}/{{componentName}}.test.tsx\nsrc/components/{{componentName}}/hooks/use{{hookName}}.ts",
+      "validationCommands": [
+        { "type": "typecheck", "command": "npx tsc --noEmit", "timeoutMs": 60000, "required": true },
+        { "type": "lint", "command": "npx eslint src/components/{{componentName}}", "timeoutMs": 30000, "required": true },
+        { "type": "test", "command": "npx vitest run src/components/{{componentName}}/{{componentName}}.test.tsx", "timeoutMs": 120000, "required": true }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep"],
+      "blockedTools": ["webfetch", "websearch"],
+      "bashAllowedCommands": ["npm", "npx", "node"],
+      "retryPolicy": { "maxRetries": 3, "backoffMs": 5000, "escalateOnFailure": true },
+      "expectedOutput": "code",
+      "contextPatterns": ["react", "component", "ui", "frontend", "jsx", "tsx"],
+      "estimatedDurationMs": 240000,
+      "resourceProfile": { "memoryMB": 512, "cpuPercent": 40 }
+    },
+    {
+      "id": "custom-database-migration",
+      "name": "Database Migration & Schema",
+      "category": "database",
+      "subcategory": "migration",
+      "tags": ["database", "migration", "schema", "sql", "prisma", "typeorm", "seed"],
+      "description": "Creates database migrations, seed data, and query optimization. Supports Prisma, TypeORM, Drizzle, and raw SQL with proper rollback strategies.",
+      "complexity": "high",
+      "systemPrompt": "You are a database architect specializing in schema design and migrations. You create:\n\n1. Forward and rollback migrations\n2. Proper indexes for query performance\n3. Seed data for development\n4. Type-safe database queries\n5. Connection pooling configuration\n6. Query performance analysis\n\nMigration patterns:\n- Always provide rollback path\n- Use transactions for multi-step migrations\n- Add indexes for frequently queried columns\n- Use appropriate data types (don't over-allocate)\n- Handle NULL vs NOT NULL carefully\n\nPrisma patterns:\n- Use @default for auto-generated values\n- Use @relation for foreign keys\n- Use @unique for constraints\n- Generate proper client types",
+      "userPromptTemplate": "TASK: Create database migration and schema.\n\nDatabase: {{database}}\nORM: {{orm}}\nTables: {{tables}}\nRelations: {{relations}}\nIndexes: {{indexes}}\nSeed data: {{seedData}}\n\nRequirements:\n- Migration with rollback\n- Proper indexes\n- Seed data script\n- Type-safe queries\n- Connection pooling\n\nFile structure:\n{{orm}}/migrations/{{timestamp}}_{{migrationName}}.sql\n{{orm}}/seed.ts\nsrc/db/queries/{{tableName}}.ts",
+      "validationCommands": [
+        { "type": "typecheck", "command": "npx tsc --noEmit", "timeoutMs": 60000, "required": true },
+        { "type": "custom", "command": "npx prisma validate", "timeoutMs": 30000, "required": true }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep"],
+      "blockedTools": ["webfetch"],
+      "bashAllowedCommands": ["npm", "npx", "node", "prisma", "psql", "mysql"],
+      "retryPolicy": { "maxRetries": 2, "backoffMs": 10000, "escalateOnFailure": true },
+      "expectedOutput": "code",
+      "contextPatterns": ["database", "migration", "schema", "table", "query"],
+      "estimatedDurationMs": 600000,
+      "resourceProfile": { "memoryMB": 1024, "cpuPercent": 60 }
+    },
+    {
+      "id": "custom-security-audit",
+      "name": "Security Audit & Hardening",
+      "category": "security",
+      "subcategory": "audit",
+      "tags": ["security", "audit", "vulnerability", "owasp", "hardening", "encryption", "xss", "csrf"],
+      "description": "Performs comprehensive security audit of codebase. Identifies vulnerabilities, suggests fixes, implements security headers, rate limiting, and input sanitization.",
+      "complexity": "expert",
+      "systemPrompt": "You are a security engineer specializing in web application security. You perform:\n\n1. OWASP Top 10 vulnerability analysis\n2. Dependency vulnerability scanning\n3. Code security review\n4. Authentication/authorization audit\n5. Input validation testing\n6. Security header configuration\n\nSecurity patterns:\n- Use helmet.js for security headers\n- Implement CSRF protection\n- Use parameterized queries (prevent SQL injection)\n- Sanitize all user inputs\n- Use bcrypt/argon2 for password hashing\n- Implement rate limiting\n- Use HTTPS everywhere\n- Set secure cookie flags\n\nNEVER:\n- Store passwords in plain text\n- Use eval() or Function()\n- Expose stack traces in production\n- Use weak random number generators",
+      "userPromptTemplate": "TASK: Perform security audit and implement hardening.\n\nApplication: {{appName}}\nFramework: {{framework}}\nAuthentication: {{authMethod}}\nKnown concerns: {{concerns}}\n\nRequirements:\n- OWASP Top 10 analysis\n- Security headers\n- Input sanitization\n- Rate limiting\n- CSRF protection\n- Security audit report\n\nOutput:\n- SecurityAuditReport.md\n- Security patches\n- Updated configuration",
+      "validationCommands": [
+        { "type": "security", "command": "npx npm-audit-mcp", "timeoutMs": 60000, "required": true },
+        { "type": "lint", "command": "npx eslint --plugin security src/", "timeoutMs": 60000, "required": false }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep", "websearch"],
+      "bashAllowedCommands": ["npm", "npx", "node"],
+      "retryPolicy": { "maxRetries": 2, "backoffMs": 5000, "escalateOnFailure": true },
+      "expectedOutput": "mixed",
+      "contextPatterns": ["security", "audit", "vulnerability", "hardening"],
+      "estimatedDurationMs": 600000,
+      "resourceProfile": { "memoryMB": 512, "cpuPercent": 50 }
+    },
+    {
+      "id": "custom-test-suite",
+      "name": "Comprehensive Test Suite",
+      "category": "testing",
+      "subcategory": "unit",
+      "tags": ["testing", "unit", "integration", "e2e", "vitest", "jest", "coverage", "mock", "fixture"],
+      "description": "Creates comprehensive test suites with unit, integration, and E2E tests. Includes fixtures, mocks, factories, and coverage reporting with proper test isolation.",
+      "complexity": "high",
+      "systemPrompt": "You are a QA engineer specializing in test automation. You create:\n\n1. Unit tests (isolated, fast, deterministic)\n2. Integration tests (API, database, external services)\n3. E2E tests (user workflows)\n4. Test fixtures and factories\n5. Mocking strategies\n6. Coverage reports\n\nTesting principles:\n- Arrange-Act-Assert pattern\n- One assertion per test (ideally)\n- Test behavior, not implementation\n- Use descriptive test names\n- Keep tests independent\n- Use factories for test data\n- Mock external dependencies\n\nTool: Vitest (preferred) or Jest\n- Use describe/it/expect\n- Use vi.mock() for module mocking\n- Use vi.fn() for function mocking\n- Use beforeAll/beforeEach for setup",
+      "userPromptTemplate": "TASK: Create comprehensive test suite.\n\nModule: {{moduleName}}\nFunctions: {{functions}}\nDependencies: {{dependencies}}\nEdge cases: {{edgeCases}}\n\nRequirements:\n- Unit tests for all functions\n- Integration tests for API endpoints\n- Mock external services\n- Test fixtures/factories\n- 80%+ coverage target\n- Proper test isolation\n\nFile structure:\nsrc/__tests__/unit/{{moduleName}}.test.ts\nsrc/__tests__/integration/{{moduleName}}.test.ts\nsrc/__tests__/fixtures/{{moduleName}}.fixtures.ts\nsrc/__tests__/factories/{{moduleName}}.factory.ts",
+      "validationCommands": [
+        { "type": "test", "command": "npx vitest run --coverage", "timeoutMs": 300000, "required": true },
+        { "type": "typecheck", "command": "npx tsc --noEmit", "timeoutMs": 60000, "required": true }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep"],
+      "blockedTools": ["webfetch"],
+      "bashAllowedCommands": ["npm", "npx", "node", "vitest"],
+      "retryPolicy": { "maxRetries": 3, "backoffMs": 5000, "escalateOnFailure": true },
+      "expectedOutput": "code",
+      "contextPatterns": ["test", "testing", "unit", "integration", "coverage"],
+      "estimatedDurationMs": 480000,
+      "resourceProfile": { "memoryMB": 1024, "cpuPercent": 70 }
+    },
+    {
+      "id": "custom-docker-deploy",
+      "name": "Docker & Kubernetes Deployment",
+      "category": "devops",
+      "subcategory": "containerization",
+      "tags": ["docker", "kubernetes", "k8s", "container", "deployment", "ci/cd", "helm", "compose"],
+      "description": "Creates Docker containers and Kubernetes manifests for production deployment. Includes Dockerfile, docker-compose, K8s manifests, Helm charts, and CI/CD pipeline.",
+      "complexity": "high",
+      "systemPrompt": "You are a DevOps engineer specializing in containerization and orchestration. You create:\n\n1. Multi-stage Dockerfiles (small, secure images)\n2. Docker Compose for local development\n3. Kubernetes manifests (Deployment, Service, Ingress)\n4. Helm charts for templated deployments\n5. CI/CD pipeline configuration\n6. Health checks and readiness probes\n\nDocker patterns:\n- Use multi-stage builds\n- Minimize layers\n- Use .dockerignore\n- Run as non-root user\n- Use specific base image tags (not :latest)\n- Set proper health checks\n\nKubernetes patterns:\n- Use namespaces\n- Set resource limits/requests\n- Use liveness/readiness probes\n- Use ConfigMaps/Secrets\n- Use RollingUpdate strategy",
+      "userPromptTemplate": "TASK: Create Docker and Kubernetes deployment setup.\n\nApplication: {{appName}}\nLanguage: {{language}}\nPort: {{port}}\nEnvironment: {{env}}\nScaling: {{scaling}}\n\nRequirements:\n- Multi-stage Dockerfile\n- docker-compose.yml\n- K8s Deployment + Service\n- Health checks\n- Resource limits\n- CI/CD pipeline\n\nFile structure:\nDockerfile\ndocker-compose.yml\n.k8s/deployment.yml\n.k8s/service.yml\n.github/workflows/deploy.yml\nhelm/{{appName}}/Chart.yaml",
+      "validationCommands": [
+        { "type": "custom", "command": "docker build -t {{appName}}:test .", "timeoutMs": 300000, "required": true },
+        { "type": "custom", "command": "kubectl apply -f .k8s/ --dry-run=client", "timeoutMs": 60000, "required": true }
+      ],
+      "allowedTools": ["read", "write", "edit", "bash", "glob", "grep"],
+      "blockedTools": ["webfetch"],
+      "bashAllowedCommands": ["docker", "kubectl", "helm", "npm", "npx"],
+      "retryPolicy": { "maxRetries": 2, "backoffMs": 10000, "escalateOnFailure": true },
+      "expectedOutput": "code",
+      "contextPatterns": ["docker", "kubernetes", "deploy", "container", "ci/cd"],
+      "estimatedDurationMs": 600000,
+      "resourceProfile": { "memoryMB": 2048, "cpuPercent": 80 }
+    }
+  ]
+}

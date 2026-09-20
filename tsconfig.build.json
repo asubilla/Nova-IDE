@@ -1,0 +1,50 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "outDir": "./dist",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "server/**/*.ts",
+    "core/**/*.ts",
+    "agents/**/*.ts",
+    "security/**/*.ts",
+    "distribution/**/*.ts",
+    "extensions/**/*.ts",
+    "database/**/*.ts",
+    "coordination/**/*.ts",
+    "context/**/*.ts",
+    "quality/**/*.ts",
+    "registry/**/*.ts",
+    "error-fix-loop/**/*.ts",
+    "session/**/*.ts",
+    "live-preview/**/*.ts",
+    "electron/**/*.ts",
+    "cli/**/*.ts",
+    "loops/**/*.ts",
+    "preview/**/*.ts",
+    "advanced/**/*.ts",
+    "artifacts/**/*.ts",
+    "templates/**/*.ts",
+    "index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests/**/*.ts",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
+}

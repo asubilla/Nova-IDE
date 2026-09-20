@@ -1,0 +1,178 @@
+{
+  "mcpServers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/workspace"],
+      "autoStart": true,
+      "restartOnFailure": true,
+      "maxRestarts": 3,
+      "tools": [
+        { "name": "read_file", "description": "Read file contents", "inputSchema": { "type": "object", "properties": { "path": { "type": "string" } }, "required": ["path"] } },
+        { "name": "write_file", "description": "Write file contents", "inputSchema": { "type": "object", "properties": { "path": { "type": "string" }, "content": { "type": "string" } }, "required": ["path", "content"] } },
+        { "name": "list_directory", "description": "List directory contents", "inputSchema": { "type": "object", "properties": { "path": { "type": "string" } }, "required": ["path"] } }
+      ],
+      "resources": [
+        { "uri": "file:///workspace", "name": "Workspace Root", "description": "Root workspace directory" }
+      ]
+    },
+    {
+      "name": "github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_TOKEN": "${GITHUB_TOKEN}" },
+      "autoStart": false,
+      "tools": [
+        { "name": "create_issue", "description": "Create a GitHub issue", "inputSchema": { "type": "object", "properties": { "repo": { "type": "string" }, "title": { "type": "string" }, "body": { "type": "string" } }, "required": ["repo", "title"] } },
+        { "name": "list_issues", "description": "List issues in a repository", "inputSchema": { "type": "object", "properties": { "repo": { "type": "string" }, "state": { "type": "string" } }, "required": ["repo"] } },
+        { "name": "create_pull_request", "description": "Create a pull request", "inputSchema": { "type": "object", "properties": { "repo": { "type": "string" }, "title": { "type": "string" }, "head": { "type": "string" }, "base": { "type": "string" } }, "required": ["repo", "title", "head", "base"] } }
+      ]
+    },
+    {
+      "name": "database",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "./data.sqlite"],
+      "autoStart": true,
+      "tools": [
+        { "name": "query", "description": "Execute SQL query", "inputSchema": { "type": "object", "properties": { "sql": { "type": "string" } }, "required": ["sql"] } },
+        { "name": "list_tables", "description": "List all tables", "inputSchema": { "type": "object", "properties": {} } }
+      ]
+    }
+  ],
+  "lspServers": [
+    {
+      "name": "typescript-language-server",
+      "language": "typescript",
+      "command": "npx",
+      "args": ["-y", "typescript-language-server", "--stdio"],
+      "filePatterns": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+      "autoStart": true,
+      "initializationOptions": { "preferences": { "includeInlayParameterNameHints": "all", "includeInlayVariableTypeHints": true } },
+      "capabilities": {
+        "textDocument": { "completion": true, "hover": true, "definition": true, "references": true, "formatting": true, "codeAction": true, "rename": true },
+        "workspace": { "workspaceFolders": true, "configuration": true }
+      }
+    },
+    {
+      "name": "pyright",
+      "language": "python",
+      "command": "npx",
+      "args": ["-y", "pyright-langserver", "--stdio"],
+      "filePatterns": ["**/*.py"],
+      "autoStart": true,
+      "initializationOptions": { "python": { "pythonPath": "python3" } }
+    },
+    {
+      "name": "rust-analyzer",
+      "language": "rust",
+      "command": "rust-analyzer",
+      "args": ["--stdio"],
+      "filePatterns": ["**/*.rs"],
+      "autoStart": true
+    },
+    {
+      "name": "gopls",
+      "language": "go",
+      "command": "gopls",
+      "args": ["serve"],
+      "filePatterns": ["**/*.go"],
+      "autoStart": true
+    },
+    {
+      "name": "clangd",
+      "language": "cpp",
+      "command": "clangd",
+      "args": ["--stdio"],
+      "filePatterns": ["**/*.cpp", "**/*.c", "**/*.h", "**/*.hpp"],
+      "autoStart": false
+    }
+  ],
+  "plugins": [
+    {
+      "name": "nova-ai-assistant",
+      "version": "1.0.0",
+      "description": "AI-powered code completion and suggestions",
+      "author": "Nova Team",
+      "main": "./dist/index.js",
+      "type": "ai-provider",
+      "hooks": ["onCodeComplete", "onCodeReview", "onCodeTransform"],
+      "permissions": ["read", "write", "edit"],
+      "activationEvents": ["onLanguage:typescript", "onLanguage:python"],
+      "contributes": {
+        "commands": [
+          { "command": "nova.ai.complete", "title": "AI Complete Code", "category": "Nova" },
+          { "command": "nova.ai.review", "title": "AI Review Code", "category": "Nova" },
+          { "command": "nova.ai.explain", "title": "AI Explain Code", "category": "Nova" }
+        ],
+        "keybindings": [
+          { "command": "nova.ai.complete", "key": "Ctrl+Space", "when": "editorTextFocus" }
+        ]
+      }
+    },
+    {
+      "name": "nova-test-runner",
+      "version": "1.0.0",
+      "description": "Run and manage tests from the IDE",
+      "author": "Nova Team",
+      "main": "./dist/test-runner.js",
+      "type": "agent-tool",
+      "hooks": ["onTestRun", "onTestResult"],
+      "permissions": ["read", "bash"],
+      "activationEvents": ["onLanguage:typescript", "onLanguage:javascript"],
+      "contributes": {
+        "commands": [
+          { "command": "nova.test.run", "title": "Run Tests", "category": "Nova" },
+          { "command": "nova.test.runFile", "title": "Run Tests in File", "category": "Nova" },
+          { "command": "nova.test.runFailed", "title": "Run Failed Tests", "category": "Nova" }
+        ]
+      }
+    },
+    {
+      "name": "nova-db-explorer",
+      "version": "1.0.0",
+      "description": "Database explorer and query tool",
+      "author": "Community",
+      "main": "./dist/db-explorer.js",
+      "type": "data-source",
+      "hooks": ["onQuery", "onSchemaChange"],
+      "permissions": ["read", "bash"],
+      "config": { "defaultDatabase": "sqlite", "maxRows": 1000 }
+    },
+    {
+      "name": "nova-security-scanner",
+      "version": "1.0.0",
+      "description": "Security vulnerability scanner",
+      "author": "Security Team",
+      "main": "./dist/security.js",
+      "type": "validator",
+      "hooks": ["onCodeSave", "onCodeReview"],
+      "permissions": ["read", "bash", "websearch"],
+      "activationEvents": ["*"],
+      "contributes": {
+        "commands": [
+          { "command": "nova.security.scan", "title": "Security Scan", "category": "Nova Security" },
+          { "command": "nova.security.audit", "title": "Security Audit", "category": "Nova Security" }
+        ]
+      }
+    },
+    {
+      "name": "nova-docker-support",
+      "version": "1.0.0",
+      "description": "Docker container management",
+      "author": "DevOps Team",
+      "main": "./dist/docker.js",
+      "type": "agent-tool",
+      "hooks": ["onContainerStart", "onContainerStop"],
+      "permissions": ["read", "write", "bash"],
+      "activationEvents": ["onFile:docker-compose.yml", "onFile:Dockerfile"],
+      "contributes": {
+        "commands": [
+          { "command": "nova.docker.build", "title": "Docker Build", "category": "Docker" },
+          { "command": "nova.docker.up", "title": "Docker Compose Up", "category": "Docker" },
+          { "command": "nova.docker.down", "title": "Docker Compose Down", "category": "Docker" },
+          { "command": "nova.docker.logs", "title": "Docker Logs", "category": "Docker" }
+        ]
+      }
+    }
+  ]
+}
