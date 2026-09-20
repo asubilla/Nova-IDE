@@ -1,8 +1,7 @@
-name: Build & Package
+name: Release
 
 on:
   push:
-    branches: [main]
     tags: ['v*']
 
 permissions:
@@ -66,10 +65,6 @@ jobs:
       - name: Package for Windows
         run: node electron/package.js win
 
-      - name: List release contents
-        run: dir release /s /b
-        shell: cmd
-
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
@@ -101,9 +96,6 @@ jobs:
 
       - name: Package for macOS
         run: node electron/package.js mac
-
-      - name: List release contents
-        run: find release -type f | head -50
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
@@ -137,9 +129,6 @@ jobs:
       - name: Package for Linux
         run: node electron/package.js linux
 
-      - name: List release contents
-        run: find release -type f | head -50
-
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
@@ -150,7 +139,6 @@ jobs:
   release:
     needs: [package-windows, package-mac, package-linux]
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
 
     steps:
       - uses: actions/checkout@v4
