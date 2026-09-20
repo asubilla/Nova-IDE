@@ -362,7 +362,7 @@ class ElectronBuilder {
     this.copyFiles();
     this.writeAppPackageJson();
     if (this.hasElectronPackager()) {
-      return this.buildWithPackager("mac", "universal", "darwin");
+        return this.buildWithPackager("mac", "arm64", "darwin");
     }
     return this.buildSimpleZip("mac");
   }

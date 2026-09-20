@@ -151,7 +151,7 @@ async function packageForMac() {
     out: RELEASE,
     name: config.productName,
     platform: "darwin",
-    arch: "universal",
+    arch: "arm64",
     overwrite: true,
     asar: true,
     appBundleId: config.appId,
