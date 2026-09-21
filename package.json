@@ -161,7 +161,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Nova IDE",
-      "include": "build/installer.nsh",
       "installerIcon": "electron/assets/icon.ico",
       "uninstallerIcon": "electron/assets/icon.ico",
       "installerHeaderIcon": "electron/assets/icon.ico",
@@ -207,7 +206,7 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "electron/assets",
+      "icon": "electron/assets/icon.png",
       "category": "Development",
       "artifactName": "Nova-IDE-${version}-linux-${arch}.${ext}"
     }
