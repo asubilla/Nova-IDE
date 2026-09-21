@@ -140,13 +140,10 @@ function getWebPath(): string {
   if (isDev) {
     return path.join(__dirname, "..", "web", "index.html");
   }
-  return path.join(process.resourcesPath, "web", "index.html");
+  return path.join(app.getAppPath(), "web", "index.html");
 }
 
 function getPreloadPath(): string {
-  if (isDev) {
-    return path.join(__dirname, "preload.js");
-  }
   return path.join(__dirname, "preload.js");
 }
 
@@ -158,7 +155,9 @@ function createWindow(): void {
     minHeight: 600,
     backgroundColor: "#1e1e2e",
     title: "Nova IDE",
-    icon: path.join(__dirname, "..", "electron", "assets", "icon.png"),
+    icon: isDev
+      ? path.join(__dirname, "..", "electron", "assets", "icon.png")
+      : path.join(app.getAppPath(), "electron", "assets", "icon.png"),
     webPreferences: {
       preload: getPreloadPath(),
       contextIsolation: true,
