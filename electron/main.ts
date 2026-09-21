@@ -138,7 +138,7 @@ async function markFirstRunDone(): Promise<void> {
 
 function getWebPath(): string {
   if (isDev) {
-    return path.join(__dirname, "..", "web", "index.html");
+    return path.join(__dirname, "..", "..", "web", "index.html");
   }
   return path.join(app.getAppPath(), "web", "index.html");
 }
@@ -156,7 +156,7 @@ function createWindow(): void {
     backgroundColor: "#1e1e2e",
     title: "Nova IDE",
     icon: isDev
-      ? path.join(__dirname, "..", "electron", "assets", "icon.png")
+      ? path.join(__dirname, "..", "..", "electron", "assets", "icon.png")
       : path.join(app.getAppPath(), "electron", "assets", "icon.png"),
     webPreferences: {
       preload: getPreloadPath(),
