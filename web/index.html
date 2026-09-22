@@ -541,35 +541,40 @@
     var chatContextFile = null;
     var logFilterLevel = "all";
 
-    require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
-    require(["vs/editor/editor.main"], function () {
-      window.monaco = monaco;
-      monaco.editor.defineTheme("nova-dark", {
-        base: "vs-dark", inherit: true,
-        rules: [
-          { token: "comment", foreground: "6A9955", fontStyle: "italic" },
-          { token: "keyword", foreground: "C586C0" },
-          { token: "string", foreground: "CE9178" },
-          { token: "number", foreground: "B5CEA8" },
-          { token: "type", foreground: "4EC9B0" },
-          { token: "function", foreground: "DCDCAA" },
-          { token: "variable", foreground: "9CDCFE" },
-          { token: "tag", foreground: "569CD6" },
-          { token: "attribute.name", foreground: "9CDCFE" },
-          { token: "attribute.value", foreground: "CE9178" }
-        ],
-        colors: {
-          "editor.background": "#0D1117", "editor.foreground": "#C9D1D9",
-          "editor.lineHighlightBackground": "#161B22", "editor.selectionBackground": "#264F78",
-          "editorCursor.foreground": "#58A6FF", "editorLineNumber.foreground": "#484F58",
-          "editorLineNumber.activeForeground": "#C9D1D9", "editorIndentGuide.background": "#21262D",
-          "editorWidget.background": "#161B22", "editorWidget.border": "#30363D",
-          "input.background": "#0D1117", "input.border": "#30363D", "focusBorder": "#1F6FEB"
-        }
+    try {
+      require.config({ paths: { vs: "https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs" } });
+      require(["vs/editor/editor.main"], function () {
+        window.monaco = monaco;
+        monaco.editor.defineTheme("nova-dark", {
+          base: "vs-dark", inherit: true,
+          rules: [
+            { token: "comment", foreground: "6A9955", fontStyle: "italic" },
+            { token: "keyword", foreground: "C586C0" },
+            { token: "string", foreground: "CE9178" },
+            { token: "number", foreground: "B5CEA8" },
+            { token: "type", foreground: "4EC9B0" },
+            { token: "function", foreground: "DCDCAA" },
+            { token: "variable", foreground: "9CDCFE" },
+            { token: "tag", foreground: "569CD6" },
+            { token: "attribute.name", foreground: "9CDCFE" },
+            { token: "attribute.value", foreground: "CE9178" }
+          ],
+          colors: {
+            "editor.background": "#0D1117", "editor.foreground": "#C9D1D9",
+            "editor.lineHighlightBackground": "#161B22", "editor.selectionBackground": "#264F78",
+            "editorCursor.foreground": "#58A6FF", "editorLineNumber.foreground": "#484F58",
+            "editorLineNumber.activeForeground": "#C9D1D9", "editorIndentGuide.background": "#21262D",
+            "editorWidget.background": "#161B22", "editorWidget.border": "#30363D",
+            "input.background": "#0D1117", "input.border": "#30363D", "focusBorder": "#1F6FEB"
+          }
+        });
+        monaco.editor.setTheme("nova-dark");
+        document.dispatchEvent(new Event("nova:ready"));
       });
-      monaco.editor.setTheme("nova-dark");
+    } catch (e) {
+      console.warn("Monaco loader unavailable, using plain editor:", e.message);
       document.dispatchEvent(new Event("nova:ready"));
-    });
+    }
 
     function createMonacoEditor(container) {
       if (monacoEditor) monacoEditor.dispose();
@@ -702,7 +707,7 @@
           var entry = entries[i];
           if (entry.name.startsWith(".") && entry.name!==".gitignore") continue;
           if (entry.name==="node_modules"||entry.name===".git"||entry.name==="dist") continue;
-          var fp = dirPath+(dirPath.endsWith("/")||dirPath.endsWith("\")?"":"/")+entry.name;
+          var fp = dirPath+(dirPath.endsWith("/")||dirPath.endsWith("\\")?"":"/")+entry.name;
           var item = document.createElement("div");
           item.className = "file-tree-item";
           item.style.paddingLeft = (12+depth*16)+"px";
@@ -1021,7 +1026,7 @@
     }
     async function newFile() {
       var name=prompt("File name:");if(!name)return;
-      if(currentFolder&&nova&&nova.fs){var fp=currentFolder+(currentFolder.endsWith("/")||currentFolder.endsWith("\")?"":"/")+name;await nova.fs.writeFile(fp,"");openFiles.set(fp,{content:"",modified:false});currentFilePath=fp;var c=document.getElementById("editor-container");createMonacoEditor(c);renderTabs();if(currentFolder)openFolder(currentFolder);}
+      if(currentFolder&&nova&&nova.fs){var fp=currentFolder+(currentFolder.endsWith("/")||currentFolder.endsWith("\\")?"":"/")+name;await nova.fs.writeFile(fp,"");openFiles.set(fp,{content:"",modified:false});currentFilePath=fp;var c=document.getElementById("editor-container");createMonacoEditor(c);renderTabs();if(currentFolder)openFolder(currentFolder);}
       else{openFiles.set(name,{content:"",modified:false});currentFilePath=name;var c=document.getElementById("editor-container");createMonacoEditor(c);renderTabs();}
     }
 
