@@ -124,6 +124,10 @@ const novaAPI = {
     version: wrapInvoke(() => invoke("app:version")),
     path: wrapInvoke((n: string) => invoke("app:path", n)),
     platform: wrapInvoke(() => invoke("app:platform")),
+    minimize: () => invoke("app:minimize"),
+    maximize: () => invoke("app:maximize"),
+    close: () => invoke("app:close"),
+    toggleFullscreen: () => invoke("app:toggleFullscreen"),
   },
   on(channel: string, callback: (...args: any[]) => void): () => void {
     const handler = (_event: any, ...args: any[]) => callback(...args);

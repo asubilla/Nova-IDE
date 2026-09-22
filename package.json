@@ -144,14 +144,10 @@
         {
           "target": "nsis",
           "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
         }
       ],
       "icon": "electron/assets/icon.ico",
-      "artifactName": "Nova-IDE-${version}-win-${arch}.${ext}"
+      "artifactName": "Nova-IDE-Setup-${version}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,

@@ -62,11 +62,11 @@ jobs:
       - name: Build Windows exe
         run: npx electron-builder --win --publish never
 
-      - name: Upload Windows artifact
+      - name: Upload Windows installer
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: release/*.exe
+          name: windows-installer
+          path: release/*Setup*.exe
           retention-days: 7
 
   package-mac:

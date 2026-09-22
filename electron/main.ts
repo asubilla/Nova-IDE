@@ -165,6 +165,7 @@ function createWindow(): void {
       sandbox: false,
     },
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
+    frame: process.platform === "darwin",
     show: false,
   });
 
@@ -865,6 +866,25 @@ ipcMain.handle("app:path", (_event, name: string) => {
 
 ipcMain.handle("app:platform", () => {
   return process.platform;
+});
+
+ipcMain.handle("app:minimize", () => {
+  mainWindow?.minimize();
+});
+
+ipcMain.handle("app:maximize", () => {
+  if (!mainWindow) return;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+});
+
+ipcMain.handle("app:close", () => {
+  mainWindow?.close();
+});
+
+ipcMain.handle("app:toggleFullscreen", () => {
+  if (!mainWindow) return;
+  mainWindow.setFullScreen(!mainWindow.isFullScreen());
 });
 
 // ─── IPC Handlers: Settings ──────────────────────────────────────────────────
