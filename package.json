@@ -60,7 +60,7 @@
     "self-hosted",
     "open-source"
   ],
-  "author": "asubilla",
+  "author": "asubilla <asubilla@users.noreply.github.com>",
   "license": "MIT",
   "homepage": "https://github.com/asubilla/Nova-IDE#readme",
   "repository": {
@@ -200,6 +200,8 @@
       ],
       "icon": "electron/assets/icon.png",
       "category": "Development",
+      "maintainer": "asubilla <asubilla@users.noreply.github.com>",
+      "synopsis": "Autonomous AI-powered IDE",
       "artifactName": "Nova-IDE-${version}-linux-${arch}.${ext}"
     }
   }
